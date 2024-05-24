@@ -1,3 +1,4 @@
+import aiogram.exceptions
 from aiogram import Router, Bot, F, types
 from aiogram.filters import Command, CommandStart, StateFilter, CommandObject, or_f
 from utils import *
@@ -8,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from config import config
 from db import *
-from api_integratoins.api_groq import send_chat_request, system_preset
+from api_integratoins.api_groq import send_chat_request, system_preset, custom_markup_to_html
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
@@ -86,6 +87,7 @@ async def lang(msg: Message):
 
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
+    lexicon
     await msg.answer(text=lexicon['model'], reply_markup=keyboards.keyboard_llm)
 
 
@@ -97,6 +99,10 @@ async def lang(msg: Message):
     model = msg.text.lower()
     print(f'{model = }')
 
+    # сохранить
+    pass
+
+    # уведомить
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['model_ok'].format(model), reply_markup=None)
@@ -186,7 +192,20 @@ async def usr_txt1(msg: Message, bot: Bot):
     response = send_chat_request(conversation=conversation_history)
     answer = response.get('choices')[0]['message']['content']
 
-    # result
-    await log(logs, user, f'#a: {answer}')
-    await msg.answer(answer, parse_mode='MarkdownV2')
+    # ответить юзеру
+    try:
+        answer_html = custom_markup_to_html(answer)
+        await msg.answer(answer_html, parse_mode='HTML')
+        await log(logs, user, f'#a: {answer_html}')
+    # если
+    except aiogram.exceptions.TelegramBadRequest as e:
+        print('msg.answer error:')
+        print(e)
+        await msg.answer(answer)
+        await log(logs, user, f'#a: {answer}')
+
+    # сохранить ответ LLM в диалог этого юзера
+    finally:
+        conversation_history += [answer]
+        set_pers_json(user, 'messages', conversation_history)
 

@@ -1,26 +1,27 @@
 import json
 import requests
 from config import config
-from pprint import pprint
+import re
+import html
+
 
 api_key = config.GROQ_API_KEY
 url = "https://api.groq.com/openai/v1/chat/completions"
 headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
 conversation_template = {"messages": [{"role": "user", "content": ''}]}
-system_preset = "Please respond in {} language. Any character with code between 1 and 126 inclusively must be escaped anywhere with a preceding '\\' character"
-xsystem_preset = """Please respond in {} language. Use only following HTML tags for text formatting:
-<b>bold</b>, <strong>bold</strong>
-<i>italic</i>, <em>italic</em>
-<u>underline</u>, <ins>underline</ins>
-<s>strikethrough</s>, <strike>strikethrough</strike>, <del>strikethrough</del>
-<span class="tg-spoiler">spoiler</span>, <tg-spoiler>spoiler</tg-spoiler>
-<a href="http://www.example.com/">inline URL</a>
-<tg-emoji emoji-id="5368324170671202286">👍</tg-emoji>
-<code>inline fixed-width code</code>
-<pre>pre-formatted fixed-width code block</pre>
-<pre><code class="language-python">pre-formatted fixed-width code block written in the Python programming language</code></pre>
-<blockquote>Block quotation started\nBlock quotation continued\nThe last line of the block quotation</blockquote>
-"""
+system_preset = "Please respond in {} language."
+
+
+def custom_markup_to_html(text):
+    # escape спец символов
+    text = html.escape(text)
+
+    # замена **text** на <b>text</b>
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+
+    # замена ```code``` на <code>code</code>, включая многострочный код
+    text = re.sub(r'```(.*?)```', r'<code>\1</code>', text, flags=re.DOTALL)
+    return text
 
 
 def restart_context():
