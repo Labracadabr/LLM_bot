@@ -162,18 +162,6 @@ async def delete_context(msg: Message, state: FSMContext):
     await msg.answer(text=lexicon['delete_context'])
 
 
-# юзер нажал какую-то кнопку
-@router.callback_query(F.data == "какая-то кнопка", StateFilter(FSM.policy))
-async def privacy_ok(callback: CallbackQuery, bot: Bot, state: FSMContext):
-    user = str(callback.from_user.id)
-    await log(logs, user, 'button_ok')
-    language = get_user_info(user=user, keys=['lang']).get('lang')
-    lexicon = load_lexicon(language)
-
-    await bot.send_message(chat_id=user, text='ok')
-    await state.clear()
-
-
 # юзер что-то пишет
 @router.message(F.content_type.in_({'text'}))
 async def usr_txt1(msg: Message, bot: Bot):
@@ -197,7 +185,7 @@ async def usr_txt1(msg: Message, bot: Bot):
         answer_html = custom_markup_to_html(answer)
         await msg.answer(answer_html, parse_mode='HTML')
         await log(logs, user, f'#a: {answer_html}')
-    # если
+    # если html сломалась
     except aiogram.exceptions.TelegramBadRequest as e:
         print('msg.answer error:')
         print(e)
@@ -206,6 +194,7 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # сохранить ответ LLM в диалог этого юзера
     finally:
-        conversation_history += [answer]
+        new_msg = {"role": "assistant", "content": answer}
+        conversation_history += [new_msg]
         set_pers_json(user, 'messages', conversation_history)
 
