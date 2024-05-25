@@ -46,7 +46,7 @@ async def start_command(message: Message, bot: Bot, state: FSMContext):
     lexicon = load_lexicon(language)
 
     # приветствие
-    await message.answer(text=lexicon['start'])
+    await message.answer(text=lexicon['start']+lexicon['help'])
 
     # создать учетную запись юзера, если её еще нет
     if not user_data:
