@@ -12,20 +12,26 @@ conversation_template = {"messages": [{"role": "user", "content": ''}]}
 system_preset = "Please respond in {} language."
 
 
-def custom_markup_to_html(text):
+
+# разметка, пригодная для aiogram
+def custom_markup_to_html(text: str) -> str:
     # escape спец символов
     text = html.escape(text)
 
     # замена **text** на <b>text</b>
     text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
 
-    # замена ```code``` на <code>code</code>, включая многострочный код
+    # код с указанием ЯП
+    def code_replacement(match):
+        lang = match.group(1)
+        code = match.group(2)
+        return f'<pre><code class="language-{lang}">{code}</code></pre>'
+    text = re.sub(r'```(\w+)\n(.*?)```', code_replacement, text, flags=re.DOTALL)
+
+    # код без указания ЯП: замена ```code``` на <code>code</code>, включая многострочный код
     text = re.sub(r'```(.*?)```', r'<code>\1</code>', text, flags=re.DOTALL)
+
     return text
-
-
-def restart_context():
-    pass
 
 
 def save_json(data: dict, filename: str):
@@ -35,18 +41,12 @@ def save_json(data: dict, filename: str):
 
 
 def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
-    data = {
-        "messages": conversation,
-        "model": model
-    }
-    r = requests.post(url, headers=headers, json=data)
+    payload = {"messages": conversation, "model": model}
+    r = requests.post(url, headers=headers, json=payload)
     print(f'{r.status_code = }')
+
     save_json(r.json(), 'groq_last_resp.json')
-    print()
-    if r.ok:
-        return r.json()
-    else:
-        return {"error": "Request failed with status code: " + str(r.status_code)}
+    return r.json()
 
 
 if __name__ == '__main__':
