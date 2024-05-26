@@ -1,15 +1,12 @@
-import aiogram.exceptions
-from aiogram import Router, Bot, F, types
-from aiogram.filters import Command, CommandStart, StateFilter, CommandObject, or_f
+from aiogram import Router
+from aiogram.filters import Command, StateFilter
 from utils import *
-import keyboards
 from settings import *
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import CallbackQuery, Message, URLInputFile
+from aiogram.types import CallbackQuery, Message
 from config import config
 from db import *
-from api_integratoins.api_groq import send_chat_request, system_preset, custom_markup_to_html
 
 # Инициализация бота
 TKN = config.BOT_TOKEN

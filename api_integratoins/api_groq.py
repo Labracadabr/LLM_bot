@@ -12,7 +12,7 @@ conversation_template = {"messages": [{"role": "user", "content": ''}]}
 
 
 # сформировать системный промпт в качестве первичного сообщения
-def system_message_preset(language: str, extra=None) -> dict:
+def system_message_preset(language: str, extra='') -> dict:
     prompt = "Please respond in {} language. When writing a block of code, always specify programming language. "
     system_message = {
         "role": "system",

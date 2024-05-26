@@ -1,10 +1,7 @@
 from aiogram import Router, Bot, F
-from settings import admins, logs, check_files
-from aiogram.filters import Command
 from utils import *
-import json
 from config import config
-from db import get_user_info, set_user_info
+from db import get_user_info
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
