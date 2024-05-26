@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from config import config
 from db import *
-from api_integratoins.api_groq import send_chat_request, system_preset, custom_markup_to_html
+from api_integratoins.api_groq import send_chat_request, system_message_preset, custom_markup_to_html
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
@@ -38,11 +38,10 @@ async def start_command(message: Message, bot: Bot, state: FSMContext):
     else:
         language = str(message.from_user.language_code).lower()
         print(f'{language = }')
-        system_message = {
-            "role": "system",
-            "content": system_preset.format(language)
-        }
-        set_pers_json(user_id, 'messages', [system_message])
+
+        # создать первое системное сообщение для чата с LLM
+        set_pers_json(user_id, 'messages', [system_message_preset(language)])
+
     lexicon = load_lexicon(language)
 
     # приветствие
@@ -150,12 +149,8 @@ async def delete_context(msg: Message, state: FSMContext):
     user = str(msg.from_user.id)
     language = get_user_info(user=user).get('lang')
 
-    # удалить контекст
-    system_message = {
-        "role": "system",
-        "content": system_preset.format(language)
-    }
-    set_pers_json(user, 'messages', [system_message])
+    # удалить контекст - перезаписать системное сообщение
+    set_pers_json(user, 'messages', [system_message_preset(language)])
 
     # ответ
     lexicon = load_lexicon(language)

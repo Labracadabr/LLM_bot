@@ -9,8 +9,17 @@ api_key = config.GROQ_API_KEY
 url = "https://api.groq.com/openai/v1/chat/completions"
 headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
 conversation_template = {"messages": [{"role": "user", "content": ''}]}
-system_preset = "Please respond in {} language."
 
+
+# сформировать системный промпт в качестве первичного сообщения
+def system_message_preset(language: str, extra=None) -> dict:
+    prompt = "Please respond in {} language. When writing a block of code, always specify programming language. "
+    system_message = {
+        "role": "system",
+        "content": prompt.format(language.upper())+extra
+    }
+
+    return system_message
 
 
 # разметка, пригодная для aiogram
