@@ -112,4 +112,5 @@ def set_pers_json(user: str, key: str, val):
     user_data[key] = val
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(user_data, f, indent=2, ensure_ascii=False)
-    print(user, f'{key}: {old_val} => {val}')
+    print(user, f'edited {key = }')
+    # print(user, f'{key}: {old_val} => {val}')
