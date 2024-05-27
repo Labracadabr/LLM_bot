@@ -172,7 +172,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_pers_json(user, 'messages', conversation_history)
 
     # LLM api
-    response = send_chat_request(conversation=conversation_history)
+    response = await send_chat_request(conversation=conversation_history)
     answer = response.get('choices')[0]['message']['content']
 
     # ответить юзеру

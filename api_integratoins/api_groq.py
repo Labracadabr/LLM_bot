@@ -3,6 +3,7 @@ import requests
 from config import config
 import re
 import html
+import httpx
 
 
 api_key = config.GROQ_API_KEY
@@ -49,9 +50,11 @@ def save_json(data: dict, filename: str):
     print(filename, 'saved')
 
 
-def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
+async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
     payload = {"messages": conversation, "model": model}
-    r = requests.post(url, headers=headers, json=payload)
+    async with httpx.AsyncClient() as client:
+        r = await client.post(url, headers=headers, json=payload)
+
     print(f'{r.status_code = }')
 
     save_json(r.json(), 'groq_last_resp.json')
