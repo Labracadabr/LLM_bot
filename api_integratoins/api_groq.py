@@ -1,5 +1,4 @@
 import json
-import requests
 from config import config
 import re
 import html
@@ -40,7 +39,8 @@ def custom_markup_to_html(text: str) -> str:
 
     # код без указания ЯП: замена ```code``` на <code>code</code>, включая многострочный код
     text = re.sub(r'```(.*?)```', r'<code>\1</code>', text, flags=re.DOTALL)
-
+    # замена `code` на <code>code</code>
+    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text, flags=re.DOTALL)
     return text
 
 
