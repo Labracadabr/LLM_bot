@@ -16,7 +16,15 @@ lexicon: dict[str:str] = {
 
     'admin': '📩 Your next message will be sent to the bot admin. To cancel, press /cancel',
     'admin_sent': '✅ Message sent to the bot admin:\n',
-    'cancel': 'Sending cancelled. You can continue chatting with the GPT bot.',
+    'system': 'Set a system prompt - an instruction that affects the generation of responses.'
+              '\nFor example:'
+              '\n- Use curse words in every sentence'
+              '\n- Answer like an experienced specialist'
+              '\n- Answer briefly'
+              '\nTo cancel or delete, click /cancel'
+    ,
+    'system_ok': '✅ System prompt saved:\n',
+    'cancel': 'Action cancelled. You can continue chatting with the GPT bot.',
 
     'delete_context': 'Context deleted',
     'model': 'Chose the neural network model',

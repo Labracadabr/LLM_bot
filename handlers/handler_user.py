@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from config import config
 from db import *
-from api_integratoins.api_groq import send_chat_request, system_message_preset, custom_markup_to_html
+from api_integrations.api_groq import send_chat_request, system_message_preset, custom_markup_to_html
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
@@ -147,10 +147,12 @@ async def lng(msg: CallbackQuery, bot: Bot):
 async def delete_context(msg: Message, state: FSMContext):
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
-    language = get_user_info(user=user).get('lang')
+    user_data = get_user_info(user=user)
+    language = user_data.get('lang')
 
     # удалить контекст - перезаписать системное сообщение
-    set_pers_json(user, 'messages', [system_message_preset(language)])
+    sys_prompt = user_data.get('sys_prompt')
+    set_pers_json(user, 'messages', [system_message_preset(language, extra=sys_prompt)])
 
     # ответ
     lexicon = load_lexicon(language)
@@ -175,6 +177,11 @@ async def usr_txt1(msg: Message, bot: Bot):
     response = await send_chat_request(conversation=conversation_history)
     answer = response.get('choices')[0]['message']['content']
 
+    # usage
+    prompt = response.get('usage').get('prompt_tokens')
+    completion = response.get('usage').get('completion_tokens')
+    usage = f'{prompt, completion = }'
+
     # ответить юзеру
     try:
         answer_html = custom_markup_to_html(answer)
@@ -193,3 +200,4 @@ async def usr_txt1(msg: Message, bot: Bot):
         conversation_history += [new_msg]
         set_pers_json(user, 'messages', conversation_history)
 
+        await msg.answer(usage)
