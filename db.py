@@ -1,4 +1,3 @@
-
 from datetime import datetime
 from settings import prod
 import psycopg2
@@ -7,8 +6,9 @@ from config import config
 
 tables = {
     'users': 'users' if prod else 'users_test',
-    # 'tasks': 'tasks' if prod else 'tasks_test',
+    'logs': 'logs' if prod else 'logs_test',
 }
+
 
 # postgres декоратор для обработки ошибок, открытия и закрытия коннекта
 def postgres_decorator(func):
@@ -25,6 +25,7 @@ def postgres_decorator(func):
                 return result
         except ImportError as e:
             print("[INFO] Postgres Error:", e)
+
         # завершить подключение
         finally:
             conn.close() if conn else None
@@ -33,19 +34,15 @@ def postgres_decorator(func):
 
 # существует ли таблица
 @postgres_decorator
-def table_exists(cursor) -> bool:
-    cursor.execute("select * from information_schema.tables where table_name=%s", ('mytable',))
-    bool(cursor.rowcount)
-    result = bool(cursor.rowcount)
-    print(f'Table {tables["users"]} exists:', result)
-    return result
+def table_exists(cursor, table=None) -> bool:
+    pass
 
 
 # создать таблицу
 @postgres_decorator
-def create_table(cursor):
+def create_table(cursor, table='users'):
     create_table_query = f"""
-    CREATE TABLE IF NOT EXISTS {tables['users']} (
+    CREATE TABLE IF NOT EXISTS {tables[table]} (
                                 user_id BIGINT PRIMARY KEY,
                                 model VARCHAR(255),
                                 first_start TIMESTAMP,
@@ -57,7 +54,7 @@ def create_table(cursor):
                                 actions INTEGER,
                                 balance INTEGER
     );"""
-    res = cursor.execute(create_table_query)
+    cursor.execute(create_table_query)
     print(f"Table {tables['users']} created")
 
 
@@ -100,10 +97,10 @@ def get_user_info(cursor, user: str, keys: list = None) -> dict:
 
 # задать словарем значения юзеру
 @postgres_decorator
-def set_user_info(cursor, user: str, key_vals: dict) -> bool:
+def set_user_info(cursor, user: str, key_vals: dict, table='users') -> bool:
     # создать строку запроса
     set_str = ", ".join([f"{key} = %s" for key in key_vals.keys()])
-    upd_req = f"UPDATE {tables['users']} SET {set_str} WHERE user_id = %s"
+    upd_req = f"UPDATE {tables[table]} SET {set_str} WHERE user_id = %s"
 
     # создать кортеж значений
     values = tuple(val for val in key_vals.values()) + (user,)
@@ -132,57 +129,24 @@ def set_col(cursor, key: str, val: str) -> None:
     print(f'column {key} updated')
 
 
-# перевести из json в sql
+# добавить новую колонку
 @postgres_decorator
-def migrate_users(cursor, data):
-    flag = False
-    bad_users = []
-    for user in data:
+def add_col(cursor, col_name, data_type, table='users') -> None:
+    query = f"ALTER TABLE {tables[table]} ADD COLUMN {col_name} {data_type}"
+    cursor.execute(query)
+    print(f'added {col_name = }')
+    # Add the new column
 
-        if isinstance(data[user], list):
-            data[user] = data[user][0]
-        # Convert the datetime object to the appropriate format for PostgreSQL
-        start_date = data[user]['first_start']
-        date_time_obj = datetime.strptime(start_date, '%d/%m/%Y %H:%M')
-        data[user]['first_start'] = date_time_obj.strftime('%Y-%m-%d %H:%M:%S')
 
-        # data[user]['project'] = 'so_dev'
-
-        key_vals = {k: v for k, v in data[user].items() if v is not None}
-        # создать строку запроса
-        set_str = ", ".join([key for key in key_vals.keys()])
-        # создать кортеж значений
-        values = (user,) + tuple(val for val in key_vals.values())
-        print(f'values: {values} / user: {user}')
-        try:
-            cursor.execute(f"INSERT INTO {tables['users']} (user_id, {set_str}) VALUES ({', '.join('%s' for _ in values)});", values)
-        except Exception as e:
-            print(e)
-            bad_users.append(user)
-            continue
-
-        print(f"user {user} inserted")
-    print('migrate_users ok')
-    print('bad:')  # ['522853308', '992863889', '5109029500', '5337342772', '901159774', '639770334', '5239029846']
-    print(bad_users)
-
-# # получить список юзеров по критериям
-# @postgres_decorator
-# def get_users_list(cursor, query: str) -> list:
-#     cursor.execute(f"SELECT {', '.join(keys)} FROM users WHERE user_id = {user}")
-
-if not table_exists():
-    create_table()
 
 if __name__ == '__main__':
+    add_col(col_name='sys_prompt', data_type='varchar(255)')
     pass
 
     uuid = '13'
     # count_user = new_user(user=uuid, tg_username='biba', tg_fullname='boba', lang_tg='en', lang='fr')
     # print(f'{count_user = }')
-    print(get_user_info(user=uuid))
-    print(delete_user(user=uuid))
-    print(get_user_info(user=uuid))
+
 
     # user_upd = {
     #     'tg_fullname': 'biba',
