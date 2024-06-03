@@ -178,9 +178,9 @@ async def usr_txt1(msg: Message, bot: Bot):
     answer = response.get('choices')[0]['message']['content']
 
     # usage
-    prompt = response.get('usage').get('prompt_tokens')
-    completion = response.get('usage').get('completion_tokens')
-    usage = f'{prompt, completion = }'
+    # prompt = response.get('usage').get('prompt_tokens')
+    # completion = response.get('usage').get('completion_tokens')
+    # usage = f'{prompt, completion = }'
 
     # ответить юзеру
     try:
@@ -200,4 +200,4 @@ async def usr_txt1(msg: Message, bot: Bot):
         conversation_history += [new_msg]
         set_pers_json(user, 'messages', conversation_history)
 
-        await msg.answer(usage)
+        # await msg.answer(usage)
