@@ -12,13 +12,15 @@ conversation_template = {"messages": [{"role": "user", "content": ''}]}
 
 
 # сформировать системный промпт в качестве первичного сообщения
-def system_message_preset(language: str, extra='') -> dict:
-    prompt = "Please respond in {} language. When writing a block of code, always specify programming language. "
+def system_message_preset(language: str, extra: str) -> dict:
+    if not extra:
+        extra = ''
+
+    prompt = "Speak {} language. "
     system_message = {
         "role": "system",
         "content": prompt.format(language.upper())+extra
     }
-
     return system_message
 
 
@@ -52,12 +54,14 @@ def save_json(data: dict, filename: str):
 
 async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
     payload = {"messages": conversation, "model": model}
+    save_json(payload, 'api_integrations/groq_last_request.json')
+
     async with httpx.AsyncClient() as client:
         r = await client.post(url, headers=headers, json=payload)
 
     print(f'{r.status_code = }')
 
-    save_json(r.json(), 'groq_last_resp.json')
+    save_json(r.json(), 'api_integrations/groq_last_response.json')
     return r.json()
 
 
