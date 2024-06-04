@@ -83,6 +83,11 @@ async def status(msg: Message):
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['status'].format(tkn_today, tkn_total))
 
+    if user in admins:
+        bot_tkn_today = sum([int(i[0]) for i in get_col(col_name='tkn_total', ) if i[0] is not None])
+        bot_tkn_total = sum([int(i[0]) for i in get_col(col_name='tkn_today', ) if i[0] is not None])
+        await msg.answer(text='All users ' + lexicon['status'].format(bot_tkn_today, bot_tkn_total))
+
 
 # команда /model
 @router.message(Command(commands=['model']))
@@ -92,7 +97,6 @@ async def model(msg: Message):
 
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
-    lexicon
     await msg.answer(text=lexicon['model'], reply_markup=keyboards.keyboard_llm)
 
 
@@ -115,7 +119,7 @@ async def model_set(msg: Message):
 
 # команда /help
 @router.message(Command(commands=['help']))
-async def help(msg: Message):
+async def help_(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
