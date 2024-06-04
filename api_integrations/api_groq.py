@@ -12,7 +12,7 @@ conversation_template = {"messages": [{"role": "user", "content": ''}]}
 
 
 # сформировать системный промпт в качестве первичного сообщения
-def system_message_preset(language: str, extra: str) -> dict:
+def system_message_preset(language: str, extra: str = None) -> dict:
     if not extra:
         extra = ''
 
