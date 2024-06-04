@@ -166,21 +166,32 @@ async def usr_txt1(msg: Message, bot: Bot):
     await log(logs, user, f'#q: {msg.text}')
     await bot.send_chat_action(chat_id=user, action='typing')
 
-    # read disk
+    # read user
+    user_data = get_user_info(user=user)
     conversation_history: list = get_pers_json(user, 'messages')
+
+    # добавить новое сообщение в контекст
     new_msg = {"role": "user", "content": msg.html_text}
-    print(f'{new_msg = }')
     conversation_history += [new_msg]
     set_pers_json(user, 'messages', conversation_history)
 
-    # LLM api
+    # LLM api request
     response = await send_chat_request(conversation=conversation_history)
     answer = response.get('choices')[0]['message']['content']
 
     # usage
+    usage = response.get('usage').get('total_tokens')
     # prompt = response.get('usage').get('prompt_tokens')
     # completion = response.get('usage').get('completion_tokens')
-    # usage = f'{prompt, completion = }'
+
+    # обновить usage
+    tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
+    tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
+    upd_dict = {
+        'tkn_today': usage + tkn_today,
+        'tkn_total': usage + tkn_total,
+    }
+    set_user_info(user, key_vals=upd_dict)
 
     # ответить юзеру
     try:
@@ -194,10 +205,10 @@ async def usr_txt1(msg: Message, bot: Bot):
         await msg.answer(answer)
         await log(logs, user, f'#a: {answer}')
 
-    # сохранить ответ LLM в диалог этого юзера
     finally:
+        # сохранить ответ LLM в контекст этого юзера
         new_msg = {"role": "assistant", "content": answer}
         conversation_history += [new_msg]
         set_pers_json(user, 'messages', conversation_history)
 
-        # await msg.answer(usage)
+
