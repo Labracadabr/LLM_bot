@@ -5,6 +5,7 @@ from aiogram.types import BotCommand
 from handlers import handler_user_talk_to_admin, handler_user, handler_admin, handler_system_prompt
 from config import config
 from settings import commands
+from schedules import run_schedule, schedule_daily_task
 
 async def main():
     # Инициализация бота
@@ -36,5 +37,10 @@ async def on_start(bot: Bot) -> None:
     print(f'{bot_link = }')
 
 
+async def start_all():
+    schedule_daily_task()
+    await asyncio.gather(run_schedule(), main())
+
+
 if __name__ == '__main__':
-    asyncio.run(main())
+    asyncio.run(start_all())
