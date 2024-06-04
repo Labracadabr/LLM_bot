@@ -135,8 +135,15 @@ def add_col(cursor, col_name, data_type, table='users') -> None:
     query = f"ALTER TABLE {tables[table]} ADD COLUMN {col_name} {data_type}"
     cursor.execute(query)
     print(f'added {col_name = }')
-    # Add the new column
 
+
+# данные со всей колонки
+@postgres_decorator
+def get_col(cursor, col_name, table='users') -> list[tuple]:
+    query = f"SELECT {col_name} FROM {tables[table]}"
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    return rows
 
 
 if __name__ == '__main__':
