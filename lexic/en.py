@@ -29,7 +29,10 @@ lexicon: dict[str:str] = {
     'delete_context': 'Context deleted',
     'model': 'Chose the neural network model',
     'model_ok': 'Model choice saved: {}\n(this does not affect anything yet, in development)',
-    'status': 'Unavailable',
+    'status': 'Token usage:'
+              '\n{} today'
+              '\n{} total'
+    ,
     'no_ref': 'The link is invalid. Ask the person who brought you to us for a valid link.',
     'lang_ok': 'Language set to {}. AI response language will change after context deletion.'
                '\nTo see a list of commands, press /help',

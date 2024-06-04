@@ -69,18 +69,24 @@ async def start_command(message: Message, bot: Bot, state: FSMContext):
 
 # команда /status
 @router.message(Command(commands=['status']))
-async def lang(msg: Message):
+async def status(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
+    # read db
+    user_data = get_user_info(user=user)
+    tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
+    tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
+
+    # answer
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['status'])
+    await msg.answer(text=lexicon['status'].format(tkn_today, tkn_total))
 
 
 # команда /model
 @router.message(Command(commands=['model']))
-async def lang(msg: Message):
+async def model(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -92,7 +98,7 @@ async def lang(msg: Message):
 
 # юзер выбрал модель
 @router.message(InList(llm_list))
-async def lang(msg: Message):
+async def model_set(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
     model = msg.text.lower()
@@ -109,7 +115,7 @@ async def lang(msg: Message):
 
 # команда /help
 @router.message(Command(commands=['help']))
-async def lang(msg: Message):
+async def help(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
