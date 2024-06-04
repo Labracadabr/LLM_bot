@@ -1,11 +1,6 @@
 fix.py
 .env
-.png
+*.json
 /users_data
-logs.json
 logs.tsv
-token.json
-main.py
-accepted_files
-sent_files
 .idea
