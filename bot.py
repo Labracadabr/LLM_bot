@@ -5,6 +5,7 @@ from aiogram.types import BotCommand
 from handlers import handler_user_talk_to_admin, handler_user, handler_admin, handler_system_prompt
 from config import config
 from settings import commands
+from utils import check_files
 from schedules import run_schedule, schedule_daily_task
 
 async def main():
@@ -35,6 +36,8 @@ async def on_start(bot: Bot) -> None:
     bot_info = await bot.get_me()
     bot_link = f"https://t.me/{bot_info.username}"
     print(f'{bot_link = }')
+
+    check_files()
 
 
 async def start_all():
