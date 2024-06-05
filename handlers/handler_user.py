@@ -81,12 +81,14 @@ async def status(msg: Message):
     # answer
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['status'].format(tkn_today, tkn_total))
 
+    # more info for admin
     if user in admins:
-        bot_tkn_today = sum([int(i[0]) for i in get_col(col_name='tkn_total', ) if i[0] is not None])
-        bot_tkn_total = sum([int(i[0]) for i in get_col(col_name='tkn_today', ) if i[0] is not None])
-        await msg.answer(text='All users ' + lexicon['status'].format(bot_tkn_today, bot_tkn_total))
+        bot_tkn_today = sum([int(i[0]) for i in get_col(col_name='tkn_today', ) if i[0] is not None])
+        bot_tkn_total = sum([int(i[0]) for i in get_col(col_name='tkn_total', ) if i[0] is not None])
+        await msg.answer(text=lexicon['status_adm'].format(tkn_today, bot_tkn_today, tkn_total, bot_tkn_total))
+    else:
+        await msg.answer(text=lexicon['status'].format(tkn_today, config.llm_limit, tkn_total))
 
 
 # команда /model
