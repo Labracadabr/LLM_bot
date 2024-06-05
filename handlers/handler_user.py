@@ -193,14 +193,14 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # LLM api request
     response = await send_chat_request(conversation=conversation_history)
+    if 'error' in response.keys():  # error handling
+        await msg.answer(str(response))
+        await log(logs, user, str(response))
+        return
     answer = response.get('choices')[0]['message']['content']
 
-    # usage
-    usage = response.get('usage').get('total_tokens')
-    # prompt = response.get('usage').get('prompt_tokens')
-    # completion = response.get('usage').get('completion_tokens')
-
     # обновить usage
+    usage = response.get('usage').get('total_tokens')
     upd_dict = {
         'tkn_today': usage + tkn_today,
         'tkn_total': usage + tkn_total,
