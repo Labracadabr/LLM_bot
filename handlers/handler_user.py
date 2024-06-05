@@ -19,52 +19,47 @@ storage: MemoryStorage = MemoryStorage()
 
 # команда /start
 @router.message(CommandStart())
-async def start_command(message: Message, bot: Bot, state: FSMContext):
+async def start_command(msg: Message, bot: Bot, state: FSMContext):
     await state.clear()
-    user = message.from_user
-    msg_time = message.date.strftime('%Y-%m-%d %H:%M:%S')
+    user = msg.from_user
+    msg_time = msg.date.strftime('%Y-%m-%d %H:%M:%S')
     user_id = str(user.id)
-    await log(logs, user_id, f'start {contact_user(user=user)}')
+    # логи
+    await log(logs, user_id, f'/start {msg_time}, {user.full_name}, @{user.username}, {user.language_code}')
 
     # чтение БД
     user_data = get_user_info(user=user_id)
 
-    # язык
-    # если это не первый старт - взять язык из памяти
+    # язык. если это не первый старт - взять язык из памяти
     if user_data:
         language = user_data.get('lang')
 
     # если первый - использовать язык приложения
     else:
-        language = str(message.from_user.language_code).lower()
+        language = str(msg.from_user.language_code).lower()
         print(f'{language = }')
 
         # создать первое системное сообщение для чата с LLM
         set_pers_json(user_id, 'messages', [system_message_preset(language)])
 
-    lexicon = load_lexicon(language)
-
     # приветствие
-    await message.answer(text=lexicon['start']+lexicon['help'])
+    lexicon = load_lexicon(language)
+    await msg.answer(text=lexicon['start']+lexicon['help'])
 
     # создать учетную запись юзера, если её еще нет
     if not user_data:
-        await log(logs, user_id, f'adding user {user_id}')
-        user = message.from_user
+        user = msg.from_user
         count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username,
                               tg_fullname=user.full_name, lang_tg=user.language_code, lang=user.language_code)
 
-        # сообщить админу, кто стартанул бота
+        # сообщить админу о новом юзере
         alert = f'➕ user {count_user} {contact_user(user=user)}'
         for i in admins:
             await bot.send_message(text=alert, chat_id=i, disable_notification=True, parse_mode='HTML')
 
-        # логи
-        await log(logs, user_id, f'{msg_time}, {user.full_name}, @{user.username}, {user.language_code}')
-
     # если юзер уже в БД и просто снова нажал старт
     else:
-        await log(logs, user.id, f'start_again')
+        print(user_id, 'start_again')
 
 
 # команда /status
