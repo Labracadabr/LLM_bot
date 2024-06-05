@@ -14,6 +14,8 @@ class Config:
     password: str = None            # пароль
     port: int = None                # порт
 
+    llm_limit: int = None     # лимит генераций в день
+
 
 # загрузить конфиг из переменных окружения
 env = Env()
@@ -26,6 +28,8 @@ config = Config(
     dbname=env('dbname'),
     user=env('user'),
     password=env('password'),
-    port=env.int('port')
+    port=env.int('port'),
+
+    llm_limit=env.int('llm_limit'),
 )
 

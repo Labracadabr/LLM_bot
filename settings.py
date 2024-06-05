@@ -1,5 +1,5 @@
-prod = True
-# prod = False
+# prod = True
+prod = False
 print(f'{prod = }')
 
 # список языков UI бота
@@ -30,5 +30,3 @@ admins: list[str] = [dima]
 # где хранятся данные
 logs = 'logs.tsv'  # тсв с логами
 users_data = 'users_data'  # папка с данными юзеров
-
-limit_token = 5000

@@ -9,6 +9,7 @@ lexicon: dict[str:str] = {
             '\n/delete_context - delete context'
             '\n/language - change language'
             '\n/model - change neural network model'
+            '\n/system - set neural network behaviour'
             '\n/admin - contact the bot creator'
     ,
 
@@ -23,6 +24,7 @@ lexicon: dict[str:str] = {
               '\n- Answer briefly'
               '\nTo cancel or delete, click /cancel'
     ,
+    'limit': '⚠️ You have exceeded the daily tokens quota. You cannot use me for today, see you tomorrow.',
     'system_ok': '✅ System prompt saved:\n',
     'cancel': 'Action cancelled. You can continue chatting with the GPT bot.',
 

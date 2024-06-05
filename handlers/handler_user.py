@@ -178,7 +178,16 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # read user
     user_data = get_user_info(user=user)
+    language = user_data.get('lang')
     conversation_history: list = get_pers_json(user, 'messages')
+    tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
+    tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
+
+    # не превышен ли лимит
+    if user not in admins and tkn_today > config.llm_limit:
+        lexicon = load_lexicon(language)
+        await msg.answer(text=lexicon['limit'])
+        return
 
     # добавить новое сообщение в контекст
     new_msg = {"role": "user", "content": msg.html_text}
@@ -195,8 +204,6 @@ async def usr_txt1(msg: Message, bot: Bot):
     # completion = response.get('usage').get('completion_tokens')
 
     # обновить usage
-    tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
-    tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
     upd_dict = {
         'tkn_today': usage + tkn_today,
         'tkn_total': usage + tkn_total,
