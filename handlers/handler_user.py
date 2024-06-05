@@ -88,7 +88,7 @@ async def status(msg: Message):
 
 # команда /model
 @router.message(Command(commands=['model']))
-async def model(msg: Message):
+async def model_cmd(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -103,10 +103,9 @@ async def model_set(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
     model = msg.text.lower()
-    print(f'{model = }')
 
     # сохранить
-    pass
+    set_user_info(user, key_vals={'model': model})
 
     # уведомить
     language = get_user_info(user=user).get('lang')
@@ -122,7 +121,7 @@ async def help_(msg: Message):
 
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['help'])
+    await msg.answer(text=lexicon['help'], reply_markup=None)
 
 
 # команда /language
@@ -163,7 +162,7 @@ async def delete_context(msg: Message, state: FSMContext):
 
     # ответ
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['delete_context'])
+    await msg.answer(text=lexicon['delete_context'], reply_markup=None)
 
 
 # юзер что-то пишет
@@ -192,7 +191,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_pers_json(user, 'messages', conversation_history)
 
     # LLM api request
-    response = await send_chat_request(conversation=conversation_history)
+    response = await send_chat_request(conversation=conversation_history, model=user_data.get('model'))
     if 'error' in response.keys():  # error handling
         await msg.answer(str(response))
         await log(logs, user, str(response))

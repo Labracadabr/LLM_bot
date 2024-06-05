@@ -30,7 +30,7 @@ lexicon: dict[str:str] = {
 
     'delete_context': 'Context deleted',
     'model': 'Chose the neural network model',
-    'model_ok': 'Model choice saved: {}\n(this does not affect anything yet, in development)',
+    'model_ok': 'Model choice saved: {}',
 
     'status_adm': 'Token usage:'
                   '\n{} you / {} all today'

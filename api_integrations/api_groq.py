@@ -53,13 +53,15 @@ def save_json(data: dict, filename: str):
 
 
 async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
+    if not model:
+        model = "llama3-70b-8192"
+    # request
     payload = {"messages": conversation, "model": model}
     save_json(payload, 'api_integrations/groq_last_request.json')
 
     async with httpx.AsyncClient() as client:
         r = await client.post(url, headers=headers, json=payload)
-
-    print(f'{r.status_code = }')
+        print(f'{r.status_code = }')
 
     save_json(r.json(), 'api_integrations/groq_last_response.json')
     return r.json()
