@@ -1,5 +1,5 @@
-# prod = True
-prod = False
+prod = True
+# prod = False
 print(f'{prod = }')
 
 # список языков UI бота
