@@ -5,12 +5,6 @@ import html
 import httpx
 
 
-api_key = config.GROQ_API_KEY
-url = "https://api.groq.com/openai/v1/chat/completions"
-headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
-conversation_template = {"messages": [{"role": "user", "content": ''}]}
-
-
 # сформировать системный промпт в качестве первичного сообщения
 def system_message_preset(language: str, extra: str = None) -> dict:
     if not extra:
@@ -55,15 +49,25 @@ def save_json(data: dict, filename: str):
 async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
     if not model:
         model = "llama3-70b-8192"
-    # request
-    payload = {"messages": conversation, "model": model}
-    save_json(payload, 'api_integrations/groq_last_request.json')
 
+    # model endpoint & api
+    if model == 'codestral-latest':
+        url = "https://codestral.mistral.ai/v1/chat/completions"
+        api_key = config.MISTRAL_API_KEY
+    else:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        api_key = config.GROQ_API_KEY
+
+    # request
+    headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
+    payload = {"messages": conversation, "model": model}
+    save_json(payload, 'api_integrations/llm_last_request.json')
+    print(f'{url, api_key = }')
     async with httpx.AsyncClient() as client:
         r = await client.post(url, headers=headers, json=payload)
         print(f'{r.status_code = }')
 
-    save_json(r.json(), 'api_integrations/groq_last_response.json')
+    save_json(r.json(), 'api_integrations/llm_last_response.json')
     return r.json()
 
 

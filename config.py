@@ -7,6 +7,7 @@ from settings import prod
 class Config:
     BOT_TOKEN: str = None           # телеграм бот
     GROQ_API_KEY: str = None
+    MISTRAL_API_KEY: str = None
 
     host: str = None                # хост
     dbname: str = None              # имя базы данных
@@ -14,7 +15,7 @@ class Config:
     password: str = None            # пароль
     port: int = None                # порт
 
-    llm_limit: int = None     # лимит генераций в день
+    llm_limit: int = None     # лимит токенов в день
 
 
 # загрузить конфиг из переменных окружения
@@ -23,6 +24,7 @@ env.read_env()
 config = Config(
     BOT_TOKEN=env('BOT_TOKEN_PROD') if prod else env('BOT_TOKEN_TEST'),
     GROQ_API_KEY=env('GROQ_API_KEY'),
+    MISTRAL_API_KEY=env('MISTRAL_API_KEY'),
 
     host=env('host'),
     dbname=env('dbname'),

@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message, URLInputFile
 from config import config
 from db import *
-from api_integrations.api_groq import send_chat_request, system_message_preset, custom_markup_to_html
+from api_integrations.api_llm import send_chat_request, system_message_preset, custom_markup_to_html
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
