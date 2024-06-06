@@ -5,12 +5,13 @@ print(f'{prod = }')
 # список языков UI бота
 available_languages = ('ru', 'en')
 
-# список моделей
-llm_list = [
-    'llama3-70b-8192',
-    'llama3-8b-8192',
-    'mixtral-8x7b-32768',
-]
+# словарь моделей {frontend name: backend name}
+llm_list = {
+    'llama3-70b': 'llama3-70b-8192',
+    # 'llama3-8b': 'llama3-8b-8192',
+    'mixtral-8x7b': 'mixtral-8x7b-32768',
+    'codestral': 'codestral-latest',
+}
 
 # команды бота
 commands = {

@@ -102,7 +102,7 @@ async def model_cmd(msg: Message):
 async def model_set(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
-    model = msg.text.lower()
+    model = llm_list.get(msg.text.lower())
 
     # сохранить
     set_user_info(user, key_vals={'model': model})
