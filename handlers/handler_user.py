@@ -30,27 +30,17 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
     # чтение БД
     user_data = get_user_info(user=user_id)
 
-    # язык. если это не первый старт - взять язык из памяти
-    if user_data:
-        language = user_data.get('lang')
+    # создать учетную запись юзера, если её еще нет
+    if not user_data:
+        # сохранить язык приложения tg
+        language = str(user.language_code).lower()
 
-    # если первый - использовать язык приложения
-    else:
-        language = str(msg.from_user.language_code).lower()
-        print(f'{language = }')
+        # запись в бд
+        count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username, model='llama3-70b',
+                              tg_fullname=user.full_name, lang_tg=user.language_code, lang=language)
 
         # создать первое системное сообщение для чата с LLM
         set_pers_json(user_id, 'messages', [system_message_preset(language)])
-
-    # приветствие
-    lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['start']+lexicon['help'])
-
-    # создать учетную запись юзера, если её еще нет
-    if not user_data:
-        user = msg.from_user
-        count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username, model='llama3-70b',
-                              tg_fullname=user.full_name, lang_tg=user.language_code, lang=user.language_code)
 
         # сообщить админу о новом юзере
         alert = f'➕ user {count_user} {contact_user(user=user)}'
@@ -59,7 +49,13 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
 
     # если юзер уже в БД и просто снова нажал старт
     else:
+        # взять язык из памяти
+        language = user_data.get('lang')
         print(user_id, 'start_again')
+
+    # приветствие
+    lexicon = load_lexicon(language)
+    await msg.answer(text=lexicon['start']+lexicon['help'])
 
 
 # команда /status
