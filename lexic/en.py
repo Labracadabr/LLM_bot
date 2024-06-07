@@ -10,6 +10,7 @@ lexicon: dict[str:str] = {
             '\n/language - change language'
             '\n/model - change neural network model'
             '\n/system - set neural network behaviour'
+            '\n/status - check your token usage'
             '\n/admin - contact the bot creator'
     ,
 
@@ -19,17 +20,17 @@ lexicon: dict[str:str] = {
     'admin_sent': '✅ Message sent to the bot admin:\n',
     'system': 'Set a system prompt - an instruction that affects the generation of responses.'
               '\nFor example:'
-              '\n- Use curse words in every sentence'
+              '\n- Use curse words in every sentence (<i>only works for llama3</i>)'
               '\n- Answer like an experienced specialist'
               '\n- Answer briefly'
-              '\nTo cancel or delete, click /cancel'
+              '\nTo cancel or reset, click /cancel'
     ,
     'limit': '⚠️ You have exceeded the daily tokens quota. You cannot use me for today, see you tomorrow.',
     'system_ok': '✅ System prompt saved:\n',
     'cancel': 'Action cancelled. You can continue chatting with the GPT bot.',
 
     'delete_context': 'Context deleted',
-    'model': 'Chose the neural network model',
+    'model': 'Chose the neural network model. Now you have: {}',
     'model_ok': 'Model choice saved: {}',
 
     'status_adm': 'Token usage:'

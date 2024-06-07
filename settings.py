@@ -14,6 +14,7 @@ llm_list = {
     'gpt-4o': 'gpt-4o',
     'codestral': 'codestral-latest',
 }
+default_llm = 'llama3-70b'
 
 # команды бота
 commands = {

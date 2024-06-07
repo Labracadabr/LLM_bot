@@ -6,7 +6,7 @@ import keyboards
 from settings import *
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import CallbackQuery, Message, URLInputFile
+from aiogram.types import CallbackQuery, Message
 from config import config
 from db import *
 from api_integrations.api_llm import send_chat_request, system_message_preset, custom_markup_to_html
@@ -49,7 +49,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
     # создать учетную запись юзера, если её еще нет
     if not user_data:
         user = msg.from_user
-        count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username,
+        count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username, model='llama3-70b',
                               tg_fullname=user.full_name, lang_tg=user.language_code, lang=user.language_code)
 
         # сообщить админу о новом юзере
@@ -92,9 +92,14 @@ async def model_cmd(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = get_user_info(user=user).get('lang')
+    # какая модель уже выбрана
+    user_data = get_user_info(user=user)
+    model_now = user_data.get('model')
+
+    # показать кнопки с выбором LLM
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['model'], reply_markup=keyboards.keyboard_llm)
+    await msg.answer(text=lexicon['model'].format(model_now), reply_markup=keyboards.keyboard_llm)
 
 
 # юзер выбрал модель
@@ -102,7 +107,7 @@ async def model_cmd(msg: Message):
 async def model_set(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
-    model = llm_list.get(msg.text.lower())
+    model = msg.text.lower()
 
     # сохранить
     set_user_info(user, key_vals={'model': model})
@@ -191,7 +196,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_pers_json(user, 'messages', conversation_history)
 
     # LLM api request
-    response = await send_chat_request(conversation=conversation_history, model=user_data.get('model'))
+    response = await send_chat_request(conversation=conversation_history, model=llm_list.get(user_data.get('model')))
     if 'error' in response.keys():  # error handling
         await msg.answer(str(response))
         await log(logs, user, str(response))
