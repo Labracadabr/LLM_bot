@@ -54,6 +54,9 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
     if model == 'codestral-latest':
         url = "https://codestral.mistral.ai/v1/chat/completions"
         api_key = config.MISTRAL_API_KEY
+    elif 'gpt' in model:
+        url = "https://api.openai.com/v1/chat/completions"
+        api_key = config.OPENAI_API_KEY
     else:
         url = "https://api.groq.com/openai/v1/chat/completions"
         api_key = config.GROQ_API_KEY

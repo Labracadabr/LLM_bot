@@ -10,6 +10,8 @@ llm_list = {
     'llama3-70b': 'llama3-70b-8192',
     # 'llama3-8b': 'llama3-8b-8192',
     'mixtral-8x7b': 'mixtral-8x7b-32768',
+    # 'gpt-3.5-turbo': 'gpt-3.5-turbo',
+    'gpt-4o': 'gpt-4o',
     'codestral': 'codestral-latest',
 }
 
