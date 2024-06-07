@@ -7,11 +7,12 @@ from config import config
 from settings import commands
 from utils import check_files
 from schedules import run_schedule, schedule_daily_task
+from aiogram.client.default import DefaultBotProperties
 
 async def main():
     # Инициализация бота
     storage: MemoryStorage = MemoryStorage()
-    bot: Bot = Bot(token=config.BOT_TOKEN)
+    bot: Bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
     dp: Dispatcher = Dispatcher(storage=storage)
     await on_start(bot=bot)
 

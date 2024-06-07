@@ -55,7 +55,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
         # сообщить админу о новом юзере
         alert = f'➕ user {count_user} {contact_user(user=user)}'
         for i in admins:
-            await bot.send_message(text=alert, chat_id=i, disable_notification=True, parse_mode='HTML')
+            await bot.send_message(text=alert, chat_id=i, disable_notification=True)
 
     # если юзер уже в БД и просто снова нажал старт
     else:
@@ -209,7 +209,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     # ответить юзеру
     try:
         answer_html = custom_markup_to_html(answer)
-        await msg.answer(answer_html, parse_mode='HTML')
+        await msg.answer(answer_html)
         await log(logs, user, f'#a: {answer_html}')
     # если html сломалась
     except aiogram.exceptions.TelegramBadRequest as e:
