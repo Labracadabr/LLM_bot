@@ -9,7 +9,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message
 from config import config
 from db import *
-from api_integrations.api_llm import send_chat_request, system_message_preset, custom_markup_to_html
+from api_integrations.api_llm import *
 
 # Инициализация бота
 TKN = config.BOT_TOKEN
@@ -40,7 +40,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
                               tg_fullname=user.full_name, lang_tg=user.language_code, lang=language)
 
         # создать первое системное сообщение для чата с LLM
-        set_pers_json(user_id, 'messages', [system_message_preset(language)])
+        set_pers_json(user_id, 'messages', [system_message(language)])
 
         # сообщить админу о новом юзере
         alert = f'➕ user {count_user} {contact_user(user=user)}'
@@ -55,7 +55,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
 
     # приветствие
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['start']+lexicon['help'])
+    await msg.answer(text=lexicon['start'] + lexicon['help'])
 
 
 # команда /status
@@ -149,7 +149,7 @@ async def lng(msg: CallbackQuery, bot: Bot):
     await log(logs, user, f'language: {language}')
 
 
-# команда delete_context > спросить языки
+# команда delete_context
 @router.message(or_f(Command('delete_context')))
 async def delete_context(msg: Message, state: FSMContext):
     await log(logs, msg.from_user.id, msg.text)
@@ -159,7 +159,7 @@ async def delete_context(msg: Message, state: FSMContext):
 
     # удалить контекст - перезаписать системное сообщение
     sys_prompt = user_data.get('sys_prompt')
-    set_pers_json(user, 'messages', [system_message_preset(language, extra=sys_prompt)])
+    set_pers_json(user, 'messages', [system_message(language, extra=sys_prompt)])
 
     # ответ
     lexicon = load_lexicon(language)
@@ -167,27 +167,48 @@ async def delete_context(msg: Message, state: FSMContext):
 
 
 # юзер что-то пишет
-@router.message(F.content_type.in_({'text'}))
+@router.message(F.content_type.in_({'text', 'photo'}))
 async def usr_txt1(msg: Message, bot: Bot):
     user = str(msg.from_user.id)
-    await log(logs, user, f'#q: {msg.text}')
-    await bot.send_chat_action(chat_id=user, action='typing')
 
-    # read user
+    # read user data
     user_data = get_user_info(user=user)
     language = user_data.get('lang')
+    lexicon = load_lexicon(language)
     conversation_history: list = get_pers_json(user, 'messages')
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
     tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
 
+    # работа с фото
+    if msg.photo:
+        # выбрана ли visual модель
+        model = user_data.get('model')
+        if model != 'gpt-4o':
+            await msg.answer(text=lexicon['not_visual'])
+            return
+
+        # скачать фото
+        photo_save_path = f'{users_data}/{user}_input.jpg'
+        await bot_download(msg, bot, path=photo_save_path)
+
+        # словарь сообщения к отправке
+        prompt = msg.caption
+        new_msg = user_message(prompt, encode_image(photo_save_path))
+
+    # работа с текстом
+    else:
+        prompt = msg.html_text
+        new_msg = user_message(prompt)
+
+    await log(logs, user, f'#q: {prompt}')
+    await bot.send_chat_action(chat_id=user, action='typing')
+
     # не превышен ли лимит
     if user not in admins and tkn_today > config.llm_limit:
-        lexicon = load_lexicon(language)
         await msg.answer(text=lexicon['limit'])
         return
 
     # добавить новое сообщение в контекст
-    new_msg = {"role": "user", "content": msg.html_text}
     conversation_history += [new_msg]
     set_pers_json(user, 'messages', conversation_history)
 
