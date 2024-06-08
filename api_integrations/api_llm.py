@@ -1,49 +1,8 @@
-import json
+from utils import save_json
 from config import config
 import re
 import html
 import httpx
-
-
-# сформировать системный промпт в качестве первичного сообщения
-def system_message_preset(language: str, extra: str = None) -> dict:
-    if not extra:
-        extra = ''
-
-    prompt = "Speak {} language. "
-    system_message = {
-        "role": "system",
-        "content": prompt.format(language.upper())+extra
-    }
-    return system_message
-
-
-# разметка, пригодная для aiogram
-def custom_markup_to_html(text: str) -> str:
-    # escape спец символов
-    text = html.escape(text)
-
-    # замена **text** на <b>text</b>
-    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
-
-    # код с указанием ЯП
-    def code_replacement(match):
-        lang = match.group(1)
-        code = match.group(2)
-        return f'<pre><code class="language-{lang}">{code}</code></pre>'
-    text = re.sub(r'```(\w+)\n(.*?)```', code_replacement, text, flags=re.DOTALL)
-
-    # код без указания ЯП: замена ```code``` на <code>code</code>, включая многострочный код
-    text = re.sub(r'```(.*?)```', r'<code>\1</code>', text, flags=re.DOTALL)
-    # замена `code` на <code>code</code>
-    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text, flags=re.DOTALL)
-    return text
-
-
-def save_json(data: dict, filename: str):
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(data, f, indent=2, ensure_ascii=False)
-    print(filename, 'saved')
 
 
 async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
@@ -65,13 +24,72 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
     headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
     payload = {"messages": conversation, "model": model}
     save_json(payload, 'api_integrations/llm_last_request.json')
-    print(f'{url, api_key = }')
+
+    # response
     async with httpx.AsyncClient() as client:
         r = await client.post(url, headers=headers, json=payload)
         print(f'{r.status_code = }')
 
     save_json(r.json(), 'api_integrations/llm_last_response.json')
     return r.json()
+
+
+# сформировать системный промпт в качестве первичного сообщения
+def system_message(language: str, extra: str = None) -> dict:
+    if not extra:
+        extra = ''
+
+    prompt = f"Speak {language.upper()} language. "
+    msg_dict = {
+        "role": "system",
+        "content": prompt + extra
+    }
+    return msg_dict
+
+
+# сообщение от юзера в чат с LLM
+def user_message(prompt: str, encoded_image=None) -> dict:
+    # если сообщение с изображением (только для gpt-4o)
+    if encoded_image:
+        content = [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url":
+                {"url": f"data:image/jpeg;base64,{encoded_image}"}
+             }
+        ]
+    # если только текст
+    else:
+        content = prompt
+
+    msg_dict = {
+        "role": "user",
+        "content": content,
+        "max_tokens": 300
+    }
+    return msg_dict
+
+
+# разметка, пригодная для aiogram
+def custom_markup_to_html(text: str) -> str:
+    # escape спец символов
+    text = html.escape(text)
+
+    # замена **text** на <b>text</b>
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)
+
+    # код с указанием ЯП
+    def code_replacement(match):
+        lang = match.group(1)
+        code = match.group(2)
+        return f'<pre><code class="language-{lang}">{code}</code></pre>'
+
+    text = re.sub(r'```(\w+)\n(.*?)```', code_replacement, text, flags=re.DOTALL)
+
+    # код без указания ЯП: замена ```code``` на <code>code</code>, включая многострочный код
+    text = re.sub(r'```(.*?)```', r'<code>\1</code>', text, flags=re.DOTALL)
+    # замена `code` на <code>code</code>
+    text = re.sub(r'`(.*?)`', r'<code>\1</code>', text, flags=re.DOTALL)
+    return text
 
 
 if __name__ == '__main__':
