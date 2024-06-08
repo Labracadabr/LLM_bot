@@ -5,6 +5,8 @@ lexicon: dict[str:str] = {
             '\n\n💬 Any message you send, except commands, starts a chat with the neural network.'
             '\n\n📝 When answering questions, the bot uses the context of your previous messages. '
             'To start a new conversation with the bot, delete the current context using the command.'
+            '\n\n🖼 You can also send a photo and a text question to it in one message. '
+            'Photos are not saved in context and are processed out of context.'
             '\n\n⚙️ List of commands:'
             '\n/delete_context - delete context'
             '\n/language - change language'

@@ -85,8 +85,8 @@ def contact_user(user: User) -> str:
 
 
 # получить значение
-def get_pers_json(user: str, key: str):
-    path = f'{users_data}/{user}.json'
+def get_context(filename: str, key: str):
+    path = f'{users_data}/{filename}.json'
     if os.path.exists(path):
         # прочитать бд
         with open(path, 'r', encoding='utf-8') as f:
@@ -98,8 +98,8 @@ def get_pers_json(user: str, key: str):
 
 
 # задать значение
-def set_pers_json(user: str, key: str, val):
-    path = f'{users_data}/{user}.json'
+def set_context(filename: str, key: str, val):
+    path = f'{users_data}/{filename}.json'
 
     if os.path.exists(path):
         # прочитать бд
@@ -113,9 +113,8 @@ def set_pers_json(user: str, key: str, val):
     user_data[key] = val
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(user_data, f, indent=2, ensure_ascii=False)
-    print(user, f'edited {key = }')
+    print(filename, f'edited {key = }')
     # print(user, f'{key}: {old_val} => {val}')
-
 
 
 # выбор языка. на входе языковой код (по дефолту en), на выходе словарь с лексикой этого языка

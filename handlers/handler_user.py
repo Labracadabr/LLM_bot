@@ -40,7 +40,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
                               tg_fullname=user.full_name, lang_tg=user.language_code, lang=language)
 
         # создать первое системное сообщение для чата с LLM
-        set_pers_json(user_id, 'messages', [system_message(language)])
+        set_context(user_id, 'messages', [system_message(language)])
 
         # сообщить админу о новом юзере
         alert = f'➕ user {count_user} {contact_user(user=user)}'
@@ -151,7 +151,7 @@ async def lng(msg: CallbackQuery, bot: Bot):
 
 # команда delete_context
 @router.message(or_f(Command('delete_context')))
-async def delete_context(msg: Message, state: FSMContext):
+async def delete_context(msg: Message):
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
     user_data = get_user_info(user=user)
@@ -159,7 +159,7 @@ async def delete_context(msg: Message, state: FSMContext):
 
     # удалить контекст - перезаписать системное сообщение
     sys_prompt = user_data.get('sys_prompt')
-    set_pers_json(user, 'messages', [system_message(language, extra=sys_prompt)])
+    set_context(user, 'messages', [system_message(language, extra=sys_prompt)])
 
     # ответ
     lexicon = load_lexicon(language)
@@ -175,7 +175,6 @@ async def usr_txt1(msg: Message, bot: Bot):
     user_data = get_user_info(user=user)
     language = user_data.get('lang')
     lexicon = load_lexicon(language)
-    conversation_history: list = get_pers_json(user, 'messages')
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
     tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
 
@@ -191,12 +190,18 @@ async def usr_txt1(msg: Message, bot: Bot):
         photo_save_path = f'{users_data}/{user}_input.jpg'
         await bot_download(msg, bot, path=photo_save_path)
 
+        # очистить контекст и создать первое системное сообщение (фото обрабатываются вне контекста для экономии)
+        context_path = f'{user}_img'
+        sys_prompt = user_data.get('sys_prompt')
+        set_context(context_path, 'messages', [system_message(language, extra=sys_prompt)])
+
         # словарь сообщения к отправке
         prompt = msg.caption
         new_msg = user_message(prompt, encode_image(photo_save_path))
 
     # работа с текстом
     else:
+        context_path = f'{user}'
         prompt = msg.html_text
         new_msg = user_message(prompt)
 
@@ -209,8 +214,9 @@ async def usr_txt1(msg: Message, bot: Bot):
         return
 
     # добавить новое сообщение в контекст
+    conversation_history: list = get_context(context_path, 'messages')
     conversation_history += [new_msg]
-    set_pers_json(user, 'messages', conversation_history)
+    set_context(context_path, 'messages', conversation_history)
 
     # LLM api request
     response = await send_chat_request(conversation=conversation_history, model=llm_list.get(user_data.get('model')))
@@ -244,6 +250,6 @@ async def usr_txt1(msg: Message, bot: Bot):
         # сохранить ответ LLM в контекст этого юзера
         new_msg = {"role": "assistant", "content": answer}
         conversation_history += [new_msg]
-        set_pers_json(user, 'messages', conversation_history)
+        set_context(context_path, 'messages', conversation_history)
 
 
