@@ -214,11 +214,10 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # LLM api request
     response = await send_chat_request(conversation=conversation_history, model=llm_list.get(user_data.get('model')))
-    if 'error' in response.keys():  # error handling
+    if response.get('status_code') != 200:  # error handling
         await msg.answer(str(response))
         await log(logs, user, str(response))
         return
-    answer = response.get('choices')[0]['message']['content']
 
     # обновить usage
     usage = response.get('usage').get('total_tokens')
@@ -229,6 +228,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_user_info(user, key_vals=upd_dict)
 
     # ответить юзеру
+    answer = response.get('choices')[0]['message']['content']
     try:
         answer_html = custom_markup_to_html(answer)
         await msg.answer(answer_html)

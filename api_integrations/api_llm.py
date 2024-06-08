@@ -25,13 +25,18 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
     payload = {"messages": conversation, "model": model}
     save_json(payload, 'api_integrations/llm_last_request.json')
 
-    # response
-    async with httpx.AsyncClient() as client:
-        r = await client.post(url, headers=headers, json=payload)
-        print(f'{r.status_code = }')
+    # response - 60 sec timeout
+    async with httpx.AsyncClient(timeout=60) as client:
+        try:
+            r = await client.post(url, headers=headers, json=payload)
+            print(f'{r.status_code = }')
+            response_dict: dict = r.json()
+            response_dict['status_code'] = r.status_code
+        except Exception as e:
+            return {'error': e, 'status_code': r.status_code}
 
-    save_json(r.json(), 'api_integrations/llm_last_response.json')
-    return r.json()
+    save_json(response_dict, 'api_integrations/llm_last_response.json')
+    return response_dict
 
 
 # сформировать системный промпт в качестве первичного сообщения
@@ -39,7 +44,7 @@ def system_message(language: str, extra: str = None) -> dict:
     if not extra:
         extra = ''
 
-    prompt = f"Speak {language.upper()} language. "
+    prompt = f"Respond in {language.upper()} language. "
     msg_dict = {
         "role": "system",
         "content": prompt + extra
@@ -57,15 +62,11 @@ def user_message(prompt: str, encoded_image=None) -> dict:
                 {"url": f"data:image/jpeg;base64,{encoded_image}"}
              }
         ]
+        msg_dict = {"role": "user", "content": content, "max_tokens": 300, }
+
     # если только текст
     else:
-        content = prompt
-
-    msg_dict = {
-        "role": "user",
-        "content": content,
-        "max_tokens": 300
-    }
+        msg_dict = {"role": "user", "content": prompt, }
     return msg_dict
 
 
