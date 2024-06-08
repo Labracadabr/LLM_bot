@@ -39,7 +39,7 @@ async def reply_to_msg(msg: Message, bot: Bot):
 
 
 # админ что-то пишет
-@router.message(Access(admins), lambda msg: msg.text.startswith('!'))
+@router.message(Access(admins), lambda msg: msg.text and msg.text.startswith('!'))
 async def adm_msg(msg: Message, bot: Bot):
     admin = str(msg.from_user.id)
     txt = msg.text
