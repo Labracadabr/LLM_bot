@@ -1,7 +1,10 @@
+import json
+import requests
 from utils import save_json
 from config import config
 import re
 import html
+import tiktoken
 import httpx
 
 
@@ -98,6 +101,51 @@ def custom_markup_to_html(text: str) -> str:
     # замена `code` на <code>code</code>
     text = re.sub(r'`(.*?)`', r'<code>\1</code>', text, flags=re.DOTALL)
     return text
+
+
+# стриминг генерации
+def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
+    if not model:
+        model = "llama3-70b-8192"
+
+    # когда число step достигает batch_size - вернуть и обнулить batch
+    step = 0
+    batch = ''
+
+    # request
+    url, headers, payload = prepare_request(conversation, model)
+    payload = {"model": model, "messages": conversation, "stream": True, }
+    response = requests.post(url, headers=headers, json=payload, stream=True)
+
+    # stream response
+    for line in response.iter_lines():
+        if line:
+            chunk = line.decode('utf-8')
+            if chunk.startswith("data: "):
+                chunk = chunk[len("data: "):]
+            try:
+                # прочить контент чанка
+                chunk_json = json.loads(chunk)
+                delta = chunk_json['choices'][0]['delta']
+                if 'content' in delta:
+                    step += 1
+                    batch += delta['content']
+
+                    # вернуть и обнулить batch
+                    if step % batch_size == 0:
+                        yield batch
+                        batch = ''
+
+            except json.JSONDecodeError:
+                pass
+    yield batch
+
+
+# посчитать число токенов в тексте
+def count_tokens(text: str, model='gpt-4o') -> int:
+    encoding = tiktoken.encoding_for_model(model)
+    tokens = encoding.encode(text)
+    return len(tokens)
 
 
 if __name__ == '__main__':
