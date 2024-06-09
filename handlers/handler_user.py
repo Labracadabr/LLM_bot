@@ -168,7 +168,7 @@ async def delete_context(msg: Message):
 
 
 # юзер что-то пишет
-@router.message(F.content_type.in_({'text', 'photo'}))
+@router.message(F.content_type.in_({'text'}))
 async def usr_txt1(msg: Message, bot: Bot):
     user = str(msg.from_user.id)
 
@@ -202,8 +202,6 @@ async def usr_txt1(msg: Message, bot: Bot):
     first = None
     full_answer = ''
     for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=32):
-        if not batch:
-            continue
         full_answer += batch
         answer_html = custom_markup_to_html(full_answer)
         try:
@@ -231,3 +229,70 @@ async def usr_txt1(msg: Message, bot: Bot):
         'tkn_total': usage + tkn_total,
     }
     set_user_info(user, key_vals=upd_dict)
+    await log(logs, user, f'#a: {full_answer}')
+
+
+# юзер отправил фото
+@router.message(F.content_type.in_({'photo'}))
+async def usr_txt1(msg: Message, bot: Bot):
+    user = str(msg.from_user.id)
+
+    # read user data
+    user_data = get_user_info(user=user)
+    language = user_data.get('lang')
+    lexicon = load_lexicon(language)
+    tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
+    tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
+    model = user_data.get('model')
+
+    # выбрана ли visual модель
+    if model != 'gpt-4o':
+        await msg.answer(text=lexicon['not_visual'])
+        return
+
+    # не превышен ли лимит
+    if user not in admins and tkn_today > config.llm_limit:
+        await msg.answer(text=lexicon['limit'])
+        return
+
+    # скачать фото
+    photo_save_path = f'{users_data}/{user}_input.jpg'
+    await bot_download(msg, bot, path=photo_save_path)
+
+    # очистить контекст и создать системный промпт (фото обрабатываются вне основного контекста для экономии)
+    context_path = f'{user}_img'
+    sys_prompt = user_data.get('sys_prompt')
+    set_context(context_path, 'messages', [system_message(language, extra=sys_prompt)])
+
+    # словарь сообщения к отправке
+    prompt = msg.caption
+    new_msg = user_message(prompt, encode_image(photo_save_path))
+    await log(logs, user, f'#qf: {prompt} #file_id: {msg.photo[-1].file_id}')
+    await bot.send_chat_action(chat_id=user, action='typing')
+
+    # добавить новое сообщение в контекст
+    conversation_history: list = get_context(context_path, 'messages')
+    conversation_history += [new_msg]
+    set_context(context_path, 'messages', conversation_history)
+
+    # LLM api request
+    response = await send_chat_request(conversation=conversation_history, model=llm_list.get(model))
+    if response.get('status_code') != 200:  # error handling
+        await msg.answer(str(response))
+        await log(logs, user, str(response))
+        return
+
+    # обновить usage
+    usage = response.get('usage').get('total_tokens')
+    upd_dict = {
+        'tkn_today': usage + tkn_today,
+        'tkn_total': usage + tkn_total,
+    }
+    set_user_info(user, key_vals=upd_dict)
+
+    # ответить юзеру
+    answer = response.get('choices')[0]['message']['content']
+    answer_html = custom_markup_to_html(answer)
+    await msg.answer(answer_html)
+    await log(logs, user, f'#a: {answer_html}')
+
