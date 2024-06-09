@@ -5,11 +5,9 @@ import html
 import httpx
 
 
-async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
-    if not model:
-        model = "llama3-70b-8192"
-
-    # model endpoint & api
+# параметры запроса
+def prepare_request(conversation: list, model):
+    # model endpoint & api key
     if model == 'codestral-latest':
         url = "https://codestral.mistral.ai/v1/chat/completions"
         api_key = config.MISTRAL_API_KEY
@@ -24,6 +22,15 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
     headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
     payload = {"messages": conversation, "model": model}
     save_json(payload, 'api_integrations/llm_last_request.json')
+    return url, headers, payload
+
+
+async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict:
+    if not model:
+        model = "llama3-70b-8192"
+
+    # request
+    url, headers, payload = prepare_request(conversation, model)
 
     # response - 60 sec timeout
     async with httpx.AsyncClient(timeout=60) as client:

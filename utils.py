@@ -167,6 +167,8 @@ def check_files():
 
 # сохранить json в удобно читаемый вид
 def save_json(data: dict, filename: str):
+    if not filename.endswith('.json'):
+        filename += '.json'
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     print(filename, 'saved')
