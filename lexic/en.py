@@ -32,9 +32,14 @@ lexicon: dict[str:str] = {
     'cancel': 'Action cancelled. You can continue chatting with the GPT bot.',
 
     'delete_context': 'Context deleted',
-    'model': 'Chose the neural network model. Now you have: <code>{}</code>',
+    'model': 'Chose the neural network model. Now you have: <code>{}</code>'
+             '\n▫️ mixtral-8x7b - universal'
+             '\n▫️ llama3-70b - capable of swearing'
+             '\n▫️ gpt-4o - can read photos'
+             '\n▫️ codestral - optimized for code generation'
+            ,
     'model_ok': 'Model choice saved: <code>{}</code>',
-    'not_visual': 'To work with photos please select /model <code>gpt-4o</code>',
+    'not_visual': '⚠️ To work with photos please select <code>gpt-4o</code>',
 
     'status_adm': 'Token usage:'
                   '\n{} you / {} all today'

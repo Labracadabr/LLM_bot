@@ -247,7 +247,7 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # выбрана ли visual модель
     if model != 'gpt-4o':
-        await msg.answer(text=lexicon['not_visual'])
+        await msg.answer(text=lexicon['not_visual'], reply_markup=keyboards.keyboard_llm)
         return
 
     # не превышен ли лимит
