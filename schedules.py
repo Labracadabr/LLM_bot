@@ -2,6 +2,7 @@ import time
 import schedule
 import asyncio
 from db import set_col
+from datetime import datetime
 
 
 # корректировка по часовому поясу. например если на устройстве gmt+3, то превратить 22 в '01'
@@ -14,6 +15,7 @@ def gmt_shift(hour: int) -> str:
 # ежедневная задача
 async def daily_task():
     print("Running daily_task")
+    # обнулить дневной учет токенов
     set_col(key='tkn_today', val=0)
 
 

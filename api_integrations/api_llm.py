@@ -9,7 +9,7 @@ import httpx
 
 
 # параметры запроса
-def prepare_request(conversation: list, model):
+def prepare_request(conversation: list, model, stream=False):
     # model endpoint & api key
     if model == 'codestral-latest':
         url = "https://codestral.mistral.ai/v1/chat/completions"
@@ -23,7 +23,7 @@ def prepare_request(conversation: list, model):
 
     # request
     headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
-    payload = {"messages": conversation, "model": model}
+    payload = {"messages": conversation, "model": model, "stream": stream, }
     save_json(payload, 'api_integrations/llm_last_request.json')
     return url, headers, payload
 
@@ -113,8 +113,7 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
     batch = ''
 
     # request
-    url, headers, payload = prepare_request(conversation, model)
-    payload = {"model": model, "messages": conversation, "stream": True, }
+    url, headers, payload = prepare_request(conversation, model, stream=True)
     response = requests.post(url, headers=headers, json=payload, stream=True)
 
     # stream response
@@ -124,7 +123,7 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
             if chunk.startswith("data: "):
                 chunk = chunk[len("data: "):]
             try:
-                # прочить контент чанка
+                # прочитать контент чанка
                 chunk_json = json.loads(chunk)
                 delta = chunk_json['choices'][0]['delta']
                 if 'content' in delta:
