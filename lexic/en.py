@@ -31,7 +31,7 @@ lexicon: dict[str:str] = {
     'system_ok': '✅ System prompt saved:\n',
     'cancel': 'Action cancelled. You can continue chatting with the GPT bot.',
 
-    'delete_context': 'Context deleted',
+    'delete_context': '\nContext deleted',
     'model': 'Chose the neural network model. Now you have: <code>{}</code>'
              '\n▫️ mixtral-8x7b - universal'
              '\n▫️ llama3-70b - capable of swearing'
@@ -50,8 +50,7 @@ lexicon: dict[str:str] = {
               '\n{} total'
     ,
     'no_ref': 'The link is invalid. Ask the person who brought you to us for a valid link.',
-    'lang_ok': 'Language set to {}. AI response language will change after context deletion.'
-               '\nTo see a list of commands, press /help',
+    'lang_ok': 'Language set to {}',
     'ban': 'Your access to the bot is limited.',
 
 }

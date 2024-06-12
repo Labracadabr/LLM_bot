@@ -111,7 +111,7 @@ async def model_set(msg: Message):
     # уведомить
     language = get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['model_ok'].format(model), reply_markup=None)
+    await msg.answer(text=lexicon['model_ok'].format(model) + lexicon['delete_context'], reply_markup=None)
 
 
 # команда /help
@@ -144,23 +144,24 @@ async def lng(msg: CallbackQuery, bot: Bot):
     # language = get_user_info(user=user, key='lang').get('lang')
     lexicon = load_lexicon(language)
 
+    # удалить контекст и перезаписать системное сообщение
+    delete_context(user, get_user_info(user=user))
+
     # уведомить о смене
-    await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()))
+    await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()) + lexicon['delete_context'])
     await log(logs, user, f'language: {language}')
 
 
 # команда delete_context
 @router.message(or_f(Command('delete_context')))
-async def delete_context(msg: Message):
+async def delete_context_(msg: Message):
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
     user_data = get_user_info(user=user)
     language = user_data.get('lang')
 
-    # удалить контекст - перезаписать системное сообщение
-    sys_prompt = user_data.get('sys_prompt')
-    set_context(user, 'messages', [system_message(language, extra=sys_prompt)])
-    set_context(user, 'stream', True)
+    # удалить контекст и перезаписать системное сообщение
+    delete_context(user, user_data)
 
     # ответ
     lexicon = load_lexicon(language)
@@ -201,7 +202,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     # LLM api stream request
     first = None
     full_answer = ''
-    for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=32):
+    for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=16):
         full_answer += batch
         answer_html = custom_markup_to_html(full_answer)
         try:
@@ -261,14 +262,12 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # очистить контекст и создать системный промпт (фото обрабатываются вне основного контекста для экономии)
     context_path = f'{user}_img'
-    sys_prompt = user_data.get('sys_prompt')
-    set_context(context_path, 'messages', [system_message(language, extra=sys_prompt)])
+    delete_context(context_path, user_data, stream=False)
 
     # словарь сообщения к отправке
     prompt = msg.caption
     new_msg = user_message(prompt, encode_image(photo_save_path))
     await log(logs, user, f'#qf: {prompt} #file_id: {msg.photo[-1].file_id}')
-    await bot.send_chat_action(chat_id=user, action='typing')
 
     # добавить новое сообщение в контекст
     conversation_history: list = get_context(context_path, 'messages')
@@ -276,6 +275,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_context(context_path, 'messages', conversation_history)
 
     # LLM api request
+    await bot.send_chat_action(chat_id=user, action='typing')
     response = await send_chat_request(conversation=conversation_history, model=llm_list.get(model))
     if response.get('status_code') != 200:  # error handling
         await msg.answer(str(response))
