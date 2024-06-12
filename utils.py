@@ -117,6 +117,16 @@ def set_context(filename: str, key: str, val):
     # print(user, f'{key}: {old_val} => {val}')
 
 
+# удалить контекст и перезаписать системное сообщение
+def delete_context(context_path: str, user_data: dict, stream=True):
+    from api_integrations.api_llm import system_message
+    language = user_data.get('lang')
+    sys_prompt = user_data.get('sys_prompt')
+    set_context(context_path, 'messages', [system_message(language, extra=sys_prompt)])
+    if stream:
+        set_context(context_path, 'stream', True)
+
+
 # выбор языка. на входе языковой код (по дефолту en), на выходе словарь с лексикой этого языка
 def load_lexicon(language: str) -> dict[str:str]:
     if language not in available_languages:
