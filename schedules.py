@@ -2,7 +2,6 @@ import time
 import schedule
 import asyncio
 from db import set_col
-from datetime import datetime
 
 
 # корректировка по часовому поясу. например если на устройстве gmt+3, то превратить 22 в '01'
@@ -21,7 +20,7 @@ async def daily_task():
 
 # внести задачу в расписание: раз в сутки, часы указаны в gmt 0
 def schedule_daily_task():
-    schedule.every().day.at(f"{gmt_shift(0)}:00").do(asyncio.create_task, daily_task())
+    schedule.every().day.at(f"{gmt_shift(0)}:00").do(asyncio.create_task, daily_task)
 
 
 # каждые s секунд проверять, не настало ли время
