@@ -12,7 +12,7 @@ def gmt_shift(hour: int) -> str:
 
 
 # ежедневная задача
-async def daily_task():
+def daily_task():
     print("Running daily_task")
     # обнулить дневной учет токенов
     set_col(key='tkn_today', val=0)
@@ -20,7 +20,7 @@ async def daily_task():
 
 # внести задачу в расписание: раз в сутки, часы указаны в gmt 0
 def schedule_daily_task():
-    schedule.every().day.at(f"{gmt_shift(0)}:00").do(asyncio.create_task, daily_task)
+    schedule.every().day.at(f"{gmt_shift(0)}:00").do(daily_task)
 
 
 # каждые s секунд проверять, не настало ли время
