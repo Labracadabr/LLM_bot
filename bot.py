@@ -2,7 +2,7 @@ import asyncio
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
-from handlers import handler_user_talk_to_admin, handler_user, handler_admin, handler_payment, handler_system_prompt
+from handlers import user_talk_to_admin, user, admin, payment, system_prompt
 from config import config
 from settings import commands
 from utils import check_files
@@ -17,11 +17,11 @@ async def main():
     await on_start(bot=bot)
 
     # Регистрируем роутеры в диспетчере
-    dp.include_router(handler_admin.router)
-    dp.include_router(handler_payment.router)
-    dp.include_router(handler_system_prompt.router)
-    dp.include_router(handler_user_talk_to_admin.router)
-    dp.include_router(handler_user.router)
+    dp.include_router(admin.router)
+    dp.include_router(payment.router)
+    dp.include_router(system_prompt.router)
+    dp.include_router(user_talk_to_admin.router)
+    dp.include_router(user.router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=False)  # False > бот ответит на апдейты, присланные за время откл

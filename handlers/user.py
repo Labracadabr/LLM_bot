@@ -5,16 +5,11 @@ from utils import *
 import keyboards
 from settings import *
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import CallbackQuery, Message
-from config import config
 from db import *
 from api_integrations.api_llm import *
 
-# Инициализация бота
-TKN = config.BOT_TOKEN
 router: Router = Router()
-storage: MemoryStorage = MemoryStorage()
 
 
 # команда /start

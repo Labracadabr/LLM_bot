@@ -3,8 +3,6 @@ from utils import *
 from config import config
 from db import get_user_info
 
-# Инициализация бота
-TKN = config.BOT_TOKEN
 router: Router = Router()
 
 

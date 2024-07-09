@@ -4,10 +4,8 @@ from utils import *
 from settings import *
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from config import config
 from db import *
 
-# Инициализация
 router: Router = Router()
 
 # prices
