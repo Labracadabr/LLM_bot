@@ -7,6 +7,7 @@ import html
 import tiktoken
 import httpx
 
+session = requests.Session()
 
 # параметры запроса
 def prepare_request(conversation: list, model, stream=False):
@@ -108,13 +109,13 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
     if not model:
         model = "llama3-70b-8192"
 
-    # когда число step достигает batch_size - вернуть и обнулить batch
-    step = 0
+    # когда число chunk_count достигает batch_size - вернуть и обнулить batch
+    chunk_count = 0
     batch = ''
 
     # request
     url, headers, payload = prepare_request(conversation, model, stream=True)
-    response = requests.post(url, headers=headers, json=payload, stream=True)
+    response = session.post(url, headers=headers, json=payload, stream=True)
 
     # stream response
     for line in response.iter_lines():
@@ -127,11 +128,12 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
                 chunk_json = json.loads(chunk)
                 delta = chunk_json['choices'][0]['delta']
                 if 'content' in delta:
-                    step += 1
+                    chunk_count += 1
                     batch += delta['content']
 
-                    # вернуть и обнулить batch
-                    if step % batch_size == 0:
+                    # вернуть и обнулить batch. если это второй чанк (первый всегда пустой) - доставить его сразу
+                    if chunk_count % batch_size == 0 or chunk_count == 2:
+                        print(f'{chunk_count, batch = }')
                         yield batch
                         batch = ''
 

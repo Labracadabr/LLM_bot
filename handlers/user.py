@@ -195,18 +195,18 @@ async def usr_txt1(msg: Message, bot: Bot):
     set_context(context_path, 'messages', conversation_history)
 
     # LLM api stream request
-    first = None
+    first_msg = None
     full_answer = ''
-    for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=16):
+    for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=20):
         full_answer += batch
         answer_html = custom_markup_to_html(full_answer)
         try:
             # первый батч отправить новым сообщением
-            if not first:
-                first = await msg.answer(answer_html)
+            if not first_msg:
+                first_msg = await msg.answer(answer_html)
             # остальные батчи добавлять редактированием первого сообщения
             else:
-                await bot.edit_message_text(answer_html, user, first.message_id)
+                await bot.edit_message_text(answer_html, user, first_msg.message_id)
 
         # если сообщение не изменено
         except aiogram.exceptions.TelegramBadRequest:
