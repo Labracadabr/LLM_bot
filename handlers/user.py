@@ -267,6 +267,12 @@ async def usr_img1(msg: Message, bot: Bot):
         db.save_msg(ans)
         return
 
+    # если сообщение без текста
+    if not msg.caption:
+        ans = await msg.answer(text=lexicon['caption'])
+        db.save_msg(ans)
+        return
+
     # скачать фото
     photo_save_path = f'{users_data}/{user}_input.jpg'
     await bot_download(msg, bot, path=photo_save_path)
@@ -288,8 +294,10 @@ async def usr_img1(msg: Message, bot: Bot):
     # LLM api request
     await bot.send_chat_action(chat_id=user, action='typing')
     response = await send_chat_request(conversation=conversation_history, model=llm_list.get(model))
-    if response.get('status_code') != 200:  # error handling
-        await msg.answer(str(response))
+
+    # error handling
+    if response.get('status_code') != 200:
+        ans = await msg.answer(json.dumps(response, indent=2))
         await log(logs, user, str(response))
         return
 
