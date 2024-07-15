@@ -1,7 +1,7 @@
+from pprint import pprint
 from aiogram import Router, Bot, F
 from utils import *
-from config import config
-from db import get_user_info
+import db
 
 router: Router = Router()
 
@@ -18,7 +18,7 @@ async def reply_to_msg(msg: Message, bot: Bot):
     user = id_from_text(orig.text)
 
     # ответ юзеру
-    language = get_user_info(user=user, keys=['lang']).get('lang')
+    language = db.get_user_info(user=user, keys=['lang']).get('lang')
     lexicon = load_lexicon(language)
     text = f"{lexicon['msg_from_admin']}\n\n<i>{admin_response}</i>"
 

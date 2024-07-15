@@ -1,12 +1,12 @@
 import aiogram.exceptions
-from aiogram import Router, Bot, F, types
-from aiogram.filters import Command, CommandStart, StateFilter, CommandObject, or_f
+from aiogram import Router, F
+from aiogram.filters import Command, CommandStart, or_f
 from utils import *
 import keyboards
 from settings import *
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from db import *
+import db
 from api_integrations.api_llm import *
 
 router: Router = Router()
@@ -23,7 +23,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
     await log(logs, user_id, f'/start {msg_time}, {user.full_name}, @{user.username}, {user.language_code}')
 
     # чтение БД
-    user_data = get_user_info(user=user_id)
+    user_data = db.get_user_info(user=user_id)
 
     # создать учетную запись юзера, если её еще нет
     if not user_data:
@@ -31,7 +31,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
         language = str(user.language_code).lower()
 
         # запись в бд
-        count_user = new_user(user=user_id, first_start=msg_time, tg_username=user.username, model='llama3-70b',
+        count_user = db.new_user(user=user_id, first_start=msg_time, tg_username=user.username, model='llama3-70b',
                               tg_fullname=user.full_name, lang_tg=user.language_code, lang=language)
 
         # создать первое системное сообщение для чата с LLM
@@ -60,18 +60,18 @@ async def status(msg: Message):
     await log(logs, user, msg.text)
 
     # read db
-    user_data = get_user_info(user=user)
+    user_data = db.get_user_info(user=user)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
     tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
 
     # answer
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
 
     # more info for admin
     if user in admins:
-        bot_tkn_today = sum([int(i[0]) for i in get_col(col_name='tkn_today', ) if i[0] is not None])
-        bot_tkn_total = sum([int(i[0]) for i in get_col(col_name='tkn_total', ) if i[0] is not None])
+        bot_tkn_today = sum([int(i[0]) for i in db.get_col(col_name='tkn_today', ) if i[0] is not None])
+        bot_tkn_total = sum([int(i[0]) for i in db.get_col(col_name='tkn_total', ) if i[0] is not None])
         await msg.answer(text=lexicon['status_adm'].format(tkn_today, bot_tkn_today, tkn_total, bot_tkn_total))
     else:
         await msg.answer(text=lexicon['status'].format(tkn_today, config.llm_limit, tkn_total))
@@ -84,7 +84,7 @@ async def model_cmd(msg: Message):
     await log(logs, user, msg.text)
 
     # какая модель уже выбрана
-    user_data = get_user_info(user=user)
+    user_data = db.get_user_info(user=user)
     model_now = user_data.get('model')
 
     # показать кнопки с выбором LLM
@@ -101,10 +101,10 @@ async def model_set(msg: Message):
     model = msg.text.lower()
 
     # сохранить
-    set_user_info(user, key_vals={'model': model})
+    db.set_user_info(user, key_vals={'model': model})
 
     # уведомить
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['model_ok'].format(model) + lexicon['delete_context'], reply_markup=None)
 
@@ -115,7 +115,7 @@ async def help_(msg: Message):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['help'], reply_markup=None)
 
@@ -135,12 +135,12 @@ async def lng(msg: CallbackQuery, bot: Bot):
     language = msg.data
 
     # сохранить значение
-    set_user_info(user=user, key_vals={'lang': language})
+    db.set_user_info(user=user, key_vals={'lang': language})
     # language = get_user_info(user=user, key='lang').get('lang')
     lexicon = load_lexicon(language)
 
     # удалить контекст и перезаписать системное сообщение
-    delete_context(user, get_user_info(user=user))
+    delete_context(user, db.get_user_info(user=user))
 
     # уведомить о смене
     await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()) + lexicon['delete_context'])
@@ -152,7 +152,7 @@ async def lng(msg: CallbackQuery, bot: Bot):
 async def delete_context_(msg: Message):
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
-    user_data = get_user_info(user=user)
+    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
 
     # удалить контекст и перезаписать системное сообщение
@@ -169,7 +169,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     user = str(msg.from_user.id)
 
     # read user data
-    user_data = get_user_info(user=user)
+    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
     lexicon = load_lexicon(language)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
@@ -224,7 +224,7 @@ async def usr_txt1(msg: Message, bot: Bot):
         'tkn_today': usage + tkn_today,
         'tkn_total': usage + tkn_total,
     }
-    set_user_info(user, key_vals=upd_dict)
+    db.set_user_info(user, key_vals=upd_dict)
     await log(logs, user, f'#a: {full_answer}')
 
 
@@ -234,7 +234,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     user = str(msg.from_user.id)
 
     # read user data
-    user_data = get_user_info(user=user)
+    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
     lexicon = load_lexicon(language)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
@@ -283,7 +283,7 @@ async def usr_txt1(msg: Message, bot: Bot):
         'tkn_today': usage + tkn_today,
         'tkn_total': usage + tkn_total,
     }
-    set_user_info(user, key_vals=upd_dict)
+    db.set_user_info(user, key_vals=upd_dict)
 
     # ответить юзеру
     answer = response.get('choices')[0]['message']['content']

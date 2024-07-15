@@ -4,7 +4,7 @@ from utils import *
 from settings import *
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
-from db import *
+import db
 
 router: Router = Router()
 
@@ -15,7 +15,7 @@ async def system(msg: Message, state: FSMContext):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['system'])
     await state.set_state(FSM.system_prompt)
@@ -28,10 +28,10 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
     await log(logs, user, msg.text)
 
     # удалить промпт
-    set_user_info(user=user, key_vals={'sys_prompt': ''})
+    db.set_user_info(user=user, key_vals={'sys_prompt': ''})
 
     # уведомить
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1, text=lexicon['cancel'])
@@ -46,10 +46,10 @@ async def system_ok(msg: Message, bot: Bot, state: FSMContext):
     system_prompt = msg.text
 
     # сохранить в бд
-    set_user_info(user, key_vals={'sys_prompt': system_prompt})
+    db.set_user_info(user, key_vals={'sys_prompt': system_prompt})
 
     # уведомить юзера
-    language = get_user_info(user=user).get('lang')
+    language = db.get_user_info(user=user).get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1,
