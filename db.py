@@ -1,11 +1,13 @@
-from datetime import datetime
 from settings import prod
 import psycopg2
 from functools import wraps
 from config import config
+from aiogram.types.message import Message
+
 
 tables = {
     'users': 'users' if prod else 'users_test',
+    'messages': 'messages' if prod else 'messages_test',
     'logs': 'logs' if prod else 'logs_test',
 }
 
@@ -40,7 +42,7 @@ def table_exists(cursor, table=None) -> bool:
 
 # создать таблицу
 @postgres_decorator
-def create_table(cursor, table='users'):
+def create_users_table(cursor, table='users'):
     create_table_query = f"""
     CREATE TABLE IF NOT EXISTS {tables[table]} (
                                 user_id BIGINT PRIMARY KEY,
@@ -52,10 +54,33 @@ def create_table(cursor, table='users'):
                                 lang VARCHAR(10),
                                 status VARCHAR(255),
                                 actions INTEGER,
-                                balance INTEGER
+                                balance INTEGER,
+                                tkn_today INTEGER,
+                                tkn_total INTEGER,
+                                img_today INTEGER,
+                                img_total INTEGER
     );"""
     cursor.execute(create_table_query)
     print(f"Table {tables['users']} created")
+
+
+# создать таблицу
+@postgres_decorator
+def create_messages_table(cursor, table='messages'):
+    create_table_query = f"""
+    CREATE TABLE IF NOT EXISTS {tables[table]} (
+                                chat INTEGER,
+                                msg_id INTEGER,
+                                reply_to INTEGER,
+                                username VARCHAR(255),
+                                text TEXT,
+                                unix INTEGER,
+                                type VARCHAR(255),
+                                bot BOOL,
+                                file_id VARCHAR(255)
+    );"""
+    cursor.execute(create_table_query)
+    print(f"Table {tables[table]} created")
 
 
 # создать запись нового юзера и вернуть их новое количество
@@ -76,6 +101,37 @@ def new_user(cursor, user, **kwargs) -> int:
     # проверить сколько юзеров в базе стало
     cursor.execute(f"SELECT COUNT(*) FROM {tables['users']}")
     return cursor.fetchone()[0]
+
+
+# сохранить новое сообщение
+@postgres_decorator
+def save_msg(cursor, msg: Message):
+    # внести в бд новые строки
+    print(f'inserting msg {msg.message_id}, chat {msg.chat.id}')
+
+    # словарь из Message
+    data = {
+        'chat': msg.chat.id,
+        'msg_id': msg.message_id,
+        'username': msg.from_user.username,
+        'text': msg.text if msg.text else msg.caption,
+        'reply_to': msg.reply_to_message.message_id if msg.reply_to_message else None,
+        'unix': int(msg.date.timestamp()),
+        'type': msg.content_type,
+        'bot': msg.from_user.is_bot,
+        'file_id': msg.photo[-1].file_id if msg.photo else None,
+    }
+
+    # ключи из словаря на входе
+    keys = tuple(key for key in data)
+
+    # запрос
+    col_names = ', '.join(keys)
+    extra_s = ", ".join(["%s" for _ in range(len(data))])
+    values = tuple(f"'{i}'" for i in list(data.values()))
+    query = f'INSERT INTO {tables["messages"]} ({col_names}) VALUES ({extra_s});' % values
+    print(f'{query = }')
+    cursor.execute(query)
 
 
 # получить словарь значений юзера. если юзер не найден - вернет None
@@ -117,6 +173,15 @@ def delete_user(cursor, user: str):
     print(f"user {user} DELETED")
 
 
+@postgres_decorator
+def drop_table(cursor, table, ):
+    query = f'DROP TABLE {table};'
+    print(f'{query = }')
+
+    cursor.execute(query)
+    print(f'table {table} deleted')
+
+
 # задать одно значение на всю колонку
 @postgres_decorator
 def set_col(cursor, key: str, val: str) -> None:
@@ -147,21 +212,7 @@ def get_col(cursor, col_name, table='users') -> list[tuple]:
 
 
 if __name__ == '__main__':
-    add_col(col_name='sys_prompt', data_type='varchar(255)')
     pass
 
-    uuid = '13'
-    # count_user = new_user(user=uuid, tg_username='biba', tg_fullname='boba', lang_tg='en', lang='fr')
-    # print(f'{count_user = }')
-
-
-    # user_upd = {
-    #     'tg_fullname': 'biba',
-    #     'lang': 'tr',
-    #     'lang_tg': 'ru',
-    #     'tg_username': 'qwertr',
-    # }
-    # set_user_info(user=uuid, key_vals=user_upd)
-    # #
-    # attributes = get_user_info(user=uuid)
-    # print(attributes)
+    # drop_table(tables['messages'])
+    create_messages_table()
