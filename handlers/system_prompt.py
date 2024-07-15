@@ -12,6 +12,7 @@ router: Router = Router()
 # команда /system
 @router.message(Command(commands=['system']))
 async def system(msg: Message, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -24,6 +25,7 @@ async def system(msg: Message, state: FSMContext):
 # команда /cancel
 @router.message(Command(commands=['cancel']), StateFilter(FSM.system_prompt))
 async def cancel(msg: Message, bot: Bot, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -41,6 +43,7 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
 # юзер задал системный промпт
 @router.message(StateFilter(FSM.system_prompt))
 async def system_ok(msg: Message, bot: Bot, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
     system_prompt = msg.text

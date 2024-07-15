@@ -12,6 +12,7 @@ router: Router = Router()
 # команда /admin
 @router.message(Command(commands=['admin']))
 async def admin(msg: Message, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -24,6 +25,7 @@ async def admin(msg: Message, state: FSMContext):
 # команда /cancel
 @router.message(Command(commands=['cancel']), StateFilter(FSM.msg_to_admin))
 async def cancel(msg: Message, bot: Bot, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -37,6 +39,7 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
 # сообщение админу
 @router.message(StateFilter(FSM.msg_to_admin))
 async def to_admin(msg: Message, bot: Bot, state: FSMContext):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 

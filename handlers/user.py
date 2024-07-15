@@ -15,6 +15,7 @@ router: Router = Router()
 # команда /start
 @router.message(CommandStart())
 async def start_command(msg: Message, bot: Bot, state: FSMContext):
+    db.save_msg(msg)
     await state.clear()
     user = msg.from_user
     msg_time = msg.date.strftime('%Y-%m-%d %H:%M:%S')
@@ -56,6 +57,7 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
 # команда /status
 @router.message(Command(commands=['status']))
 async def status(msg: Message):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -80,6 +82,7 @@ async def status(msg: Message):
 # команда /model
 @router.message(Command(commands=['model']))
 async def model_cmd(msg: Message):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -96,6 +99,7 @@ async def model_cmd(msg: Message):
 # юзер выбрал модель
 @router.message(InList(llm_list))
 async def model_set(msg: Message):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
     model = msg.text.lower()
@@ -112,6 +116,7 @@ async def model_set(msg: Message):
 # команда /help
 @router.message(Command(commands=['help']))
 async def help_(msg: Message):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
@@ -123,6 +128,7 @@ async def help_(msg: Message):
 # команда /language
 @router.message(Command(commands=['language']))
 async def lang(msg: Message):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     await msg.answer('Выберите язык / Choose language', reply_markup=keyboards.keyboard_lang)
     await log(logs, user, msg.text)
@@ -131,6 +137,7 @@ async def lang(msg: Message):
 # юзер выбрал язык
 @router.callback_query(lambda x: x.data in available_languages)
 async def lng(msg: CallbackQuery, bot: Bot):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
     language = msg.data
 
@@ -150,6 +157,7 @@ async def lng(msg: CallbackQuery, bot: Bot):
 # команда delete_context
 @router.message(or_f(Command('delete_context')))
 async def delete_context_(msg: Message):
+    db.save_msg(msg)
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
     user_data = db.get_user_info(user=user)
@@ -166,6 +174,7 @@ async def delete_context_(msg: Message):
 # юзер что-то пишет
 @router.message(F.content_type.in_({'text'}))
 async def usr_txt1(msg: Message, bot: Bot):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
 
     # read user data
@@ -178,7 +187,8 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # не превышен ли лимит
     if user not in admins and tkn_today > config.llm_limit:
-        await msg.answer(text=lexicon['limit'])
+        ans = await msg.answer(text=lexicon['limit'])
+        db.save_msg(ans)
         return
 
     # работа с текстом
@@ -196,6 +206,7 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # LLM api stream request
     first_msg = None
+    last_msg = None
     full_answer = ''
     for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=20):
         full_answer += batch
@@ -206,13 +217,15 @@ async def usr_txt1(msg: Message, bot: Bot):
                 first_msg = await msg.answer(answer_html)
             # остальные батчи добавлять редактированием первого сообщения
             else:
-                await bot.edit_message_text(answer_html, user, first_msg.message_id)
+                last_msg = await bot.edit_message_text(answer_html, user, first_msg.message_id)
 
         # если сообщение не изменено
         except aiogram.exceptions.TelegramBadRequest:
             pass
 
     # сохранить ответ LLM в контекст этого юзера
+    db.save_msg(last_msg)
+
     new_msg = {"role": "assistant", "content": full_answer}
     conversation_history += [new_msg]
     set_context(context_path, 'messages', conversation_history)
@@ -230,7 +243,8 @@ async def usr_txt1(msg: Message, bot: Bot):
 
 # юзер отправил фото
 @router.message(F.content_type.in_({'photo'}))
-async def usr_txt1(msg: Message, bot: Bot):
+async def usr_img1(msg: Message, bot: Bot):
+    db.save_msg(msg)
     user = str(msg.from_user.id)
 
     # read user data
@@ -243,12 +257,14 @@ async def usr_txt1(msg: Message, bot: Bot):
 
     # выбрана ли visual модель
     if model != 'gpt-4o':
-        await msg.answer(text=lexicon['not_visual'], reply_markup=keyboards.keyboard_llm)
+        ans = await msg.answer(text=lexicon['not_visual'], reply_markup=keyboards.keyboard_llm)
+        db.save_msg(ans)
         return
 
     # не превышен ли лимит
     if user not in admins and tkn_today > config.llm_limit:
-        await msg.answer(text=lexicon['limit'])
+        ans = await msg.answer(text=lexicon['limit'])
+        db.save_msg(ans)
         return
 
     # скачать фото
@@ -288,6 +304,7 @@ async def usr_txt1(msg: Message, bot: Bot):
     # ответить юзеру
     answer = response.get('choices')[0]['message']['content']
     answer_html = custom_markup_to_html(answer)
-    await msg.answer(answer_html)
+    ans = await msg.answer(answer_html)
+    db.save_msg(ans)
     await log(logs, user, f'#a: {answer_html}')
 

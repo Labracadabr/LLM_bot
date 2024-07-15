@@ -9,6 +9,7 @@ router: Router = Router()
 # админ ответил на сообщение
 @router.message(Access(admins), F.reply_to_message)
 async def reply_to_msg(msg: Message, bot: Bot):
+    db.save_msg(msg)
     admin = str(msg.from_user.id)
     # ответ админа
     admin_response = str(msg.text)
@@ -33,12 +34,14 @@ async def reply_to_msg(msg: Message, bot: Bot):
         await log(logs, user, f'adm_reply: {admin_response}')
         # отпр ответ юзеру и всем админам
         for i in [user]+admins:
-            await bot.send_message(chat_id=i, text=text, parse_mode='HTML')
+            ans = await bot.send_message(chat_id=i, text=text, parse_mode='HTML')
+            db.save_msg(ans)
 
 
 # админ что-то пишет
 @router.message(Access(admins), lambda msg: msg.text and msg.text.startswith('!'))
 async def adm_msg(msg: Message, bot: Bot):
+    db.save_msg(msg)
     admin = str(msg.from_user.id)
     txt = msg.text
 
