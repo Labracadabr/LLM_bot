@@ -51,7 +51,29 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
 
     # приветствие
     lexicon = load_lexicon(language)
-    await msg.answer(text=lexicon['start'] + lexicon['help'])
+    text = lexicon['start'] + lexicon['help']
+
+    # имитация стрима генерации
+    first_msg = None
+    last_msg = None
+    full_answer = ''
+    for batch in imitate_stream(text):
+        full_answer += batch
+        answer_html = custom_markup_to_html(full_answer)
+        try:
+            # первый батч отправить новым сообщением
+            if not first_msg:
+                first_msg = await msg.answer(answer_html)
+            # остальные батчи добавлять редактированием первого сообщения
+            else:
+                last_msg = await bot.edit_message_text(answer_html, user_id, first_msg.message_id)
+
+        # если сообщение не изменено
+        except aiogram.exceptions.TelegramBadRequest:
+            pass
+
+    # сохранить
+    db.save_msg(last_msg)
 
 
 # команда /status

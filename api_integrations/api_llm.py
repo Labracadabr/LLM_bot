@@ -105,7 +105,7 @@ def custom_markup_to_html(text: str) -> str:
 
 
 # стриминг генерации
-def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
+def stream(conversation: list, model="llama3-70b-8192", batch_size=20):
     if not model:
         model = "llama3-70b-8192"
 
@@ -139,6 +139,27 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
 
             except json.JSONDecodeError:
                 pass
+    yield batch
+
+
+# имитация стриминга генерации - для скриптовых сообщений, которые не генерируются LLM (напр. стартовое приветствие)
+def imitate_stream(text: str, batch_size=20):
+    # когда число chunk_count достигает batch_size - вернуть и обнулить batch
+    chunk_count = 0
+    batch = ''
+
+    # stream response
+    for word in text.split(' '):
+        try:
+            chunk_count += 1
+            batch += word + ' '
+            # вернуть и обнулить batch. если это первый чанк - доставить его сразу
+            if chunk_count % batch_size == 0 or chunk_count == 1:
+                yield batch
+                batch = ''
+
+        except Exception as e:
+            print('imitate_stream error:', e)
     yield batch
 
 
