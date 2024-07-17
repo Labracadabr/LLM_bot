@@ -133,7 +133,7 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=16):
 
                     # вернуть и обнулить batch. если это второй чанк (первый всегда пустой) - доставить его сразу
                     if chunk_count % batch_size == 0 or chunk_count == 2:
-                        print(f'{chunk_count, batch = }')
+                        # print(f'{chunk_count, batch = }')
                         yield batch
                         batch = ''
 

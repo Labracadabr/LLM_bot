@@ -137,7 +137,6 @@ async def lang(msg: Message):
 # юзер выбрал язык
 @router.callback_query(lambda x: x.data in available_languages)
 async def lng(msg: CallbackQuery, bot: Bot):
-    db.save_msg(msg)
     user = str(msg.from_user.id)
     language = msg.data
 
@@ -150,8 +149,9 @@ async def lng(msg: CallbackQuery, bot: Bot):
     delete_context(user, db.get_user_info(user=user))
 
     # уведомить о смене
-    await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()) + lexicon['delete_context'])
+    ans = await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()) + lexicon['delete_context'])
     await log(logs, user, f'language: {language}')
+    db.save_msg(ans)
 
 
 # команда delete_context
