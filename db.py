@@ -4,6 +4,7 @@ import psycopg2
 from functools import wraps
 from config import config
 from aiogram.types.message import Message
+from api_integrations.api_llm import custom_markup_to_html
 
 
 tables = {
@@ -115,7 +116,7 @@ def save_msg(cursor, msg: Message):
         'chat': msg.chat.id,
         'msg_id': msg.message_id,
         'username': msg.from_user.username,
-        'text': html.escape(msg.text) if msg.text else msg.caption,
+        'text': html.escape(msg.text) if msg.text else custom_markup_to_html(msg.caption),
         'reply_to': msg.reply_to_message.message_id if msg.reply_to_message else 0,
         'unix': int(msg.date.timestamp()),
         'type': msg.content_type,
