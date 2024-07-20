@@ -275,13 +275,6 @@ async def usr_img1(msg: Message, bot: Bot):
     lexicon = load_lexicon(language)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
     tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
-    model = user_data.get('model')
-
-    # выбрана ли visual модель
-    if model != 'gpt-4o':
-        ans = await msg.answer(text=lexicon['not_visual'], reply_markup=keyboards.keyboard_llm)
-        db.save_msg(ans)
-        return
 
     # не превышен ли лимит
     if user not in admins and tkn_today > config.llm_limit:
@@ -315,7 +308,7 @@ async def usr_img1(msg: Message, bot: Bot):
 
     # LLM api request
     await bot.send_chat_action(chat_id=user, action='typing')
-    response = await send_chat_request(conversation=conversation_history, model=llm_list.get(model))
+    response = await send_chat_request(conversation=conversation_history, model=llm_list.get('gpt-4o-mini'))
 
     # error handling
     if response.get('status_code') != 200:

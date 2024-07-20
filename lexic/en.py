@@ -1,7 +1,7 @@
 lexicon: dict[str:str] = {
     'msg_from_admin': 'Message from administrator:',
     'help': '⚛️ The bot allows you to communicate with the neural network on arbitrary topics - it can share facts, '
-            'advise, answer questions and assist with various tasks. '
+            'advise, answer questions, make up selling texts and assist with various tasks. '
             '\n\n💬 Any message you send, except commands, starts a chat with the neural network.'
             '\n\n📝 When answering questions, the bot uses the context of your previous messages. '
             'To start a new conversation with the bot, delete the current context using the command.'
@@ -35,9 +35,9 @@ lexicon: dict[str:str] = {
     'model': 'Chose the neural network model. Now you have: <code>{}</code>'
              '\n▫️ mixtral-8x7b - universal'
              '\n▫️ llama3-70b - capable of swearing'
-             '\n▫️ gpt-4o - can read photos'
              '\n▫️ codestral - optimized for code generation'
-            ,
+             '\n▫️ gpt-4o-mini - cannot be chosen, applied automatically to read your photos'
+    ,
     'model_ok': 'Model choice saved: <code>{}</code>',
     'not_visual': '⚠️ To work with photos please select <code>gpt-4o</code>',
     'caption': '⚠️ Send a photo and a text question to it in one message',
