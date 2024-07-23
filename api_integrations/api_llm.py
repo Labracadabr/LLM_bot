@@ -170,5 +170,27 @@ def count_tokens(text: str, model='gpt-4o') -> int:
     return len(tokens)
 
 
+def transcribe_audio(audio_file_path, language) -> dict:
+    url = "https://api.groq.com/openai/v1/audio/transcriptions"
+    headers = {"Authorization": f"bearer {config.GROQ_API_KEY}"}
+    data = {
+        "model": "whisper-large-v3",
+        "temperature": 0,
+        "response_format": "json",
+        "language": language.lower()
+    }
+    files = {"file": open(audio_file_path, "rb")}
+    try:
+        r = requests.post(url, headers=headers, data=data, files=files)
+        print(f'transcribe_audio {r.status_code = }')
+        response_dict: dict = r.json()
+        response_dict['status_code'] = r.status_code
+    except Exception as e:
+        return {'error': e}
+
+    save_json(response_dict, 'api_integrations/stt_last_response.json')
+    return response_dict
+
+
 if __name__ == '__main__':
     pass
