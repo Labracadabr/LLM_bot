@@ -290,7 +290,8 @@ async def usr_img1(msg: Message, bot: Bot):
 
     # скачать фото
     photo_save_path = f'{users_data}/{user}_input.jpg'
-    await bot_download(msg, bot, path=photo_save_path)
+    file_id = msg.photo[-1].file_id
+    await bot_download(file_id, msg, bot, path=photo_save_path)
 
     # очистить контекст и создать системный промпт (фото обрабатываются вне основного контекста для экономии)
     context_path = f'{user}_img'
@@ -306,9 +307,9 @@ async def usr_img1(msg: Message, bot: Bot):
     conversation_history += [new_msg]
     set_context(context_path, 'messages', conversation_history)
 
-    # LLM api request
+    # LLM api request - для фоток модель gpt-4o-mini
     await bot.send_chat_action(chat_id=user, action='typing')
-    response = await send_chat_request(conversation=conversation_history, model=llm_list.get('gpt-4o-mini'))
+    response: dict = await send_chat_request(conversation=conversation_history, model='gpt-4o-mini')
 
     # error handling
     if response.get('status_code') != 200:

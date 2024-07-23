@@ -185,9 +185,9 @@ def save_json(data: dict, filename: str):
 
 
 # скачать файл из телеграм
-async def bot_download(msg: Message, bot: Bot, path) -> None:
-    file_id = msg.photo[-1].file_id
-    delete = await msg.answer(text='Loading')
+async def bot_download(file_id: str, msg: Message, bot: Bot, path) -> None:
+    # todo user id + lexicon
+    delete = await msg.answer(text='Loading...')
     await bot.download(file=file_id, destination=path)
     await bot.delete_message(chat_id=msg.from_user.id, message_id=delete.message_id)
 
