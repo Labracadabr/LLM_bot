@@ -331,3 +331,39 @@ async def usr_img1(msg: Message, bot: Bot):
     db.save_msg(ans)
     await log(logs, user, f'#a: {answer_html}')
 
+
+# юзер отправил войс
+@router.message(F.content_type.in_({'voice'}))
+async def usr_voice(msg: Message, bot: Bot):
+    # db.save_msg(msg)
+    user = str(msg.from_user.id)
+    await bot.send_chat_action(chat_id=user, action='typing')
+
+    # read user data
+    user_data = db.get_user_info(user=user)
+    language = user_data.get('lang')
+
+    # скачать звук
+    file_save_path = f'{users_data}/{user}_input.m4a'
+    file_id = msg.voice.file_id
+    await bot.download(file=file_id, destination=file_save_path)
+
+    # STT api request
+    response: dict = transcribe_audio(file_save_path, language)
+
+    # error handling
+    if response.get('error') or response.get('status_code') != 200:
+        ans = await msg.answer(json.dumps(response, indent=2))
+        await log(logs, user, str(response))
+        return
+
+    # обновить usage
+    pass
+
+    # ответить юзеру
+    answer = response.get('text')
+    answer_html = custom_markup_to_html(answer)
+    ans = await msg.answer(answer_html)
+    # db.save_msg(ans)
+    await log(logs, user, f'#va: {answer_html}')
+
