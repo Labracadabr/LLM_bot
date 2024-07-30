@@ -2,12 +2,13 @@ import asyncio
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
-from handlers import user_talk_to_admin, user, admin, payment, system_prompt
+from handlers import ai, admin, user_talk_to_admin, payment, system_prompt, commands
 from config import config
-from settings import commands
+import settings
 from utils import check_files
 from schedules import run_schedule, schedule_daily_task
 from aiogram.client.default import DefaultBotProperties
+
 
 async def main():
     # Инициализация бота
@@ -17,11 +18,12 @@ async def main():
     await on_start(bot=bot)
 
     # Регистрируем роутеры в диспетчере
+    dp.include_router(commands.router)
     dp.include_router(admin.router)
     dp.include_router(payment.router)
     dp.include_router(system_prompt.router)
     dp.include_router(user_talk_to_admin.router)
-    dp.include_router(user.router)
+    dp.include_router(ai.router)
 
     # Пропускаем накопившиеся апдейты и запускаем polling
     await bot.delete_webhook(drop_pending_updates=False)  # False > бот ответит на апдейты, присланные за время откл
@@ -30,7 +32,7 @@ async def main():
 
 # при запуске: создать команды в меню и написать ссылку в консоль
 async def on_start(bot: Bot) -> None:
-    command_list = [BotCommand(command=item[0], description=item[1]) for item in commands.items()]
+    command_list = [BotCommand(command=item[0], description=item[1]) for item in settings.commands.items()]
     await bot.set_my_commands(commands=command_list)
     print('Команды созданы:', len(command_list), 'шт')
 
