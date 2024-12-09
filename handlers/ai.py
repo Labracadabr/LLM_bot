@@ -11,12 +11,11 @@ router: Router = Router()
 
 # юзер что-то пишет
 @router.message(F.content_type.in_({'text'}))
-async def usr_txt1(msg: Message, bot: Bot):
+async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
 
     # read user data
-    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
     lexicon = load_lexicon(language)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
@@ -81,12 +80,11 @@ async def usr_txt1(msg: Message, bot: Bot):
 
 # юзер отправил фото
 @router.message(F.content_type.in_({'photo'}))
-async def usr_img1(msg: Message, bot: Bot):
+async def usr_img1(msg: Message, bot: Bot, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
 
     # read user data
-    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
     lexicon = load_lexicon(language)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
@@ -151,13 +149,10 @@ async def usr_img1(msg: Message, bot: Bot):
 
 # юзер отправил войс
 @router.message(F.content_type.in_({'voice'}))
-async def usr_voice(msg: Message, bot: Bot):
+async def usr_voice(msg: Message, bot: Bot, user_data: dict):
     # db.save_msg(msg)
     user = str(msg.from_user.id)
     await bot.send_chat_action(chat_id=user, action='typing')
-
-    # read user data
-    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
 
     # скачать звук

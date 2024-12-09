@@ -11,12 +11,12 @@ router: Router = Router()
 
 # команда /system
 @router.message(Command(commands=['system']))
-async def system(msg: Message, state: FSMContext):
+async def system(msg: Message, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['system'])
     await state.set_state(FSM.system_prompt)
@@ -24,7 +24,7 @@ async def system(msg: Message, state: FSMContext):
 
 # команда /cancel
 @router.message(Command(commands=['cancel']), StateFilter(FSM.system_prompt))
-async def cancel(msg: Message, bot: Bot, state: FSMContext):
+async def cancel(msg: Message, bot: Bot, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
@@ -33,7 +33,7 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
     db.set_user_info(user=user, key_vals={'sys_prompt': ''})
 
     # уведомить
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1, text=lexicon['cancel'])
@@ -42,7 +42,7 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
 
 # юзер задал системный промпт
 @router.message(StateFilter(FSM.system_prompt))
-async def system_ok(msg: Message, bot: Bot, state: FSMContext):
+async def system_ok(msg: Message, bot: Bot, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
@@ -52,7 +52,7 @@ async def system_ok(msg: Message, bot: Bot, state: FSMContext):
     db.set_user_info(user, key_vals={'sys_prompt': system_prompt})
 
     # уведомить юзера
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1,

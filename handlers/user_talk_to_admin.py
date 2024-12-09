@@ -11,12 +11,12 @@ router: Router = Router()
 
 # команда /admin
 @router.message(Command(commands=['admin']))
-async def admin(msg: Message, state: FSMContext):
+async def admin(msg: Message, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['admin'])
     await state.set_state(FSM.msg_to_admin)
@@ -24,12 +24,12 @@ async def admin(msg: Message, state: FSMContext):
 
 # команда /cancel
 @router.message(Command(commands=['cancel']), StateFilter(FSM.msg_to_admin))
-async def cancel(msg: Message, bot: Bot, state: FSMContext):
+async def cancel(msg: Message, bot: Bot, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1, text=lexicon['cancel'])
@@ -38,7 +38,7 @@ async def cancel(msg: Message, bot: Bot, state: FSMContext):
 
 # сообщение админу
 @router.message(StateFilter(FSM.msg_to_admin))
-async def to_admin(msg: Message, bot: Bot, state: FSMContext):
+async def to_admin(msg: Message, bot: Bot, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
@@ -50,7 +50,7 @@ async def to_admin(msg: Message, bot: Bot, state: FSMContext):
         await bot.send_message(text=msg_to_admin, chat_id=ad, parse_mode='HTML')
 
     # уведомить юзера
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await bot.delete_message(chat_id=user, message_id=msg.message_id)
     await bot.edit_message_text(chat_id=user, message_id=msg.message_id-1,

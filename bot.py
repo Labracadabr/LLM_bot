@@ -8,6 +8,7 @@ import settings
 from utils import check_files
 from schedules import run_schedule, schedule_daily_task
 from aiogram.client.default import DefaultBotProperties
+from middlewares import MiddlewareRequestDB
 
 
 async def main():
@@ -16,6 +17,10 @@ async def main():
     bot: Bot = Bot(token=config.BOT_TOKEN, default=DefaultBotProperties(parse_mode='HTML'))
     dp: Dispatcher = Dispatcher(storage=storage)
     await on_start(bot=bot)
+
+    # middleware
+    dp.message.outer_middleware(MiddlewareRequestDB())
+    dp.callback_query.outer_middleware(MiddlewareRequestDB())
 
     # Регистрируем роутеры в диспетчере
     dp.include_router(commands.router)

@@ -14,7 +14,7 @@ router: Router = Router()
 
 # команда /start
 @router.message(CommandStart())
-async def start_command(msg: Message, bot: Bot, state: FSMContext):
+async def start_command(msg: Message, bot: Bot, state: FSMContext, user_data: dict):
     db.save_msg(msg)
     await state.clear()
     user = msg.from_user
@@ -22,9 +22,6 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
     user_id = str(user.id)
     # логи
     await log(logs, user_id, f'/start {msg_time}, {user.full_name}, @{user.username}, {user.language_code}')
-
-    # чтение БД
-    user_data = db.get_user_info(user=user_id)
 
     # создать учетную запись юзера, если её еще нет
     if not user_data:
@@ -78,13 +75,12 @@ async def start_command(msg: Message, bot: Bot, state: FSMContext):
 
 # команда /status
 @router.message(Command(commands=['status']))
-async def status(msg: Message):
+async def status(msg: Message, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
     # read db
-    user_data = db.get_user_info(user=user)
     tkn_today = user_data['tkn_today'] if user_data['tkn_today'] else 0
     tkn_total = user_data['tkn_total'] if user_data['tkn_total'] else 0
 
@@ -103,13 +99,12 @@ async def status(msg: Message):
 
 # команда /model
 @router.message(Command(commands=['model']))
-async def model_cmd(msg: Message):
+async def model_cmd(msg: Message, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
 
     # какая модель уже выбрана
-    user_data = db.get_user_info(user=user)
     model_now = user_data.get('model')
 
     # показать кнопки с выбором LLM
@@ -120,7 +115,7 @@ async def model_cmd(msg: Message):
 
 # юзер выбрал модель
 @router.message(InList(llm_list))
-async def model_set(msg: Message):
+async def model_set(msg: Message, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
@@ -130,26 +125,25 @@ async def model_set(msg: Message):
     db.set_user_info(user, key_vals={'model': model})
 
     # уведомить
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['model_ok'].format(model) + lexicon['delete_context'], reply_markup=None)
 
 
 # команда /help
 @router.message(Command(commands=['help']))
-async def help_(msg: Message):
+async def help_(msg: Message, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
-
-    language = db.get_user_info(user=user).get('lang')
+    language = user_data.get('lang')
     lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['help'], reply_markup=None)
 
 
 # команда /language
 @router.message(Command(commands=['language']))
-async def lang(msg: Message):
+async def lang(msg: Message, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
     await msg.answer('Выберите язык / Choose language', reply_markup=keyboards.keyboard_lang)
@@ -158,7 +152,7 @@ async def lang(msg: Message):
 
 # юзер выбрал язык
 @router.callback_query(lambda x: x.data in available_languages)
-async def lng(msg: CallbackQuery, bot: Bot):
+async def lng(msg: CallbackQuery, bot: Bot, user_data: dict):
     user = str(msg.from_user.id)
     language = msg.data
 
@@ -178,11 +172,10 @@ async def lng(msg: CallbackQuery, bot: Bot):
 
 # команда delete_context
 @router.message(or_f(Command('delete_context')))
-async def delete_context_(msg: Message):
+async def delete_context_(msg: Message, user_data: dict):
     db.save_msg(msg)
     await log(logs, msg.from_user.id, msg.text)
     user = str(msg.from_user.id)
-    user_data = db.get_user_info(user=user)
     language = user_data.get('lang')
 
     # удалить контекст и перезаписать системное сообщение
