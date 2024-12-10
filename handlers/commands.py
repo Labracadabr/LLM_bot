@@ -97,6 +97,19 @@ async def status(msg: Message, user_data: dict):
         await msg.answer(text=lexicon['status'].format(tkn_today, config.llm_limit, tkn_total))
 
 
+# команда /premium
+@router.message(Command(commands=['premium']))
+async def status(msg: Message, user_data: dict):
+    db.save_msg(msg)
+    user = str(msg.from_user.id)
+    await log(logs, user, msg.text)
+    language = user_data.get('lang')
+    lexicon = load_lexicon(language)
+
+    # answer
+    await msg.answer(text=lexicon['premium'])
+
+
 # команда /model
 @router.message(Command(commands=['model']))
 async def model_cmd(msg: Message, user_data: dict):
