@@ -123,6 +123,7 @@ async def model_set(msg: Message, user_data: dict):
 
     # сохранить
     db.set_user_info(user, key_vals={'model': model})
+    delete_context(user, user_data)
 
     # уведомить
     language = user_data.get('lang')
@@ -162,7 +163,7 @@ async def lng(msg: CallbackQuery, bot: Bot, user_data: dict):
     lexicon = load_lexicon(language)
 
     # удалить контекст и перезаписать системное сообщение
-    delete_context(user, db.get_user_info(user=user))
+    delete_context(user, user_data)
 
     # уведомить о смене
     ans = await bot.send_message(chat_id=user, text=lexicon["lang_ok"].format(language.upper()) + lexicon['delete_context'])

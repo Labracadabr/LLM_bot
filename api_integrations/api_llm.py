@@ -56,7 +56,7 @@ def system_message(language: str, extra: str = None) -> dict:
     if not extra:
         extra = ''
 
-    prompt = f"Respond in {language.upper()} language. "
+    prompt = f"U r assistant in telegram not. Respond in {language.upper()} language. "
     msg_dict = {
         "role": "system",
         "content": prompt + extra

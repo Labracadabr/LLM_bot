@@ -116,8 +116,8 @@ async def usr_img1(msg: Message, bot: Bot, user_data: dict):
     await bot_download(file_id, msg, bot, path=photo_save_path)
 
     # очистить контекст и создать системный промпт (фото обрабатываются вне основного контекста для экономии)
-    context_path = f'{user}_img'
-    delete_context(context_path, user_data, stream=False)
+    context_filename = f'{user}_img'
+    delete_context(context_filename, user_data, stream=False)
 
     # словарь сообщения к отправке
     prompt = msg.caption
@@ -125,9 +125,9 @@ async def usr_img1(msg: Message, bot: Bot, user_data: dict):
     await log(logs, user, f'#qf: {prompt} #file_id: {msg.photo[-1].file_id}')
 
     # добавить новое сообщение в контекст
-    conversation_history: list = get_context(context_path, 'messages')
+    conversation_history: list = get_context(context_filename, 'messages')
     conversation_history += [new_msg]
-    set_context(context_path, 'messages', conversation_history)
+    set_context(context_filename, 'messages', conversation_history)
 
     # LLM api request - для фоток модель gpt-4o-mini
     await bot.send_chat_action(chat_id=user, action='typing')
