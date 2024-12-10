@@ -60,7 +60,8 @@ def create_users_table(cursor, table='users'):
                                 tkn_today INTEGER,
                                 tkn_total INTEGER,
                                 img_today INTEGER,
-                                img_total INTEGER
+                                img_total INTEGER,
+                                premium BOOL,
     );"""
     cursor.execute(create_table_query)
     print(f"Table {tables['users']} created")
@@ -71,9 +72,9 @@ def create_users_table(cursor, table='users'):
 def create_messages_table(cursor, table='messages'):
     create_table_query = f"""
     CREATE TABLE IF NOT EXISTS {tables[table]} (
-                                chat INTEGER,
-                                msg_id INTEGER,
-                                reply_to INTEGER,
+                                chat BIGINT,
+                                msg_id BIGINT,
+                                reply_to BIGINT,
                                 username VARCHAR(255),
                                 text TEXT,
                                 unix INTEGER,

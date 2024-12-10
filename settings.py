@@ -12,12 +12,13 @@ llm_list = {
     # 'gpt-4o': 'gpt-4o',
     # 'gpt-4o-mini': 'gpt-4o-mini',
     'codestral': 'codestral-latest',
+    'o-1': 'o1-mini',
     # 'llama3-8b': 'llama3-8b-8192',
     # 'gpt-3.5': 'gpt-3.5-turbo',
 }
 default_llm = 'llama3-70b'
 
-# команды бота
+# команды бота в меню
 commands = {
     "/delete_context": "Удалить контекст беседы",
     "/language": "Сменить язык",

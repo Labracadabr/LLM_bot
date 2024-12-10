@@ -1,3 +1,4 @@
+import asyncio
 import json
 import base64
 from aiogram.filters import BaseFilter
@@ -122,7 +123,16 @@ def delete_context(context_path: str, user_data: dict, stream=True):
     from api_integrations.api_llm import system_message
     language = user_data.get('lang')
     sys_prompt = user_data.get('sys_prompt')
-    set_context(context_path, 'messages', [system_message(language, extra=sys_prompt)])
+
+    # o-1 не поддерживает system_message
+    model = user_data.get('model')
+    if model == 'o-1':
+        conversation_history = []
+        stream = False
+    else:
+        conversation_history = [system_message(language, extra=sys_prompt)]
+
+    set_context(context_path, 'messages', conversation_history)
     if stream:
         set_context(context_path, 'stream', True)
 

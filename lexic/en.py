@@ -36,7 +36,8 @@ lexicon: dict[str:str] = {
              '\n▫️ mixtral-8x7b - universal'
              '\n▫️ llama3-70b - capable of swearing'
              '\n▫️ codestral - optimized for code generation'
-             '\n▫️ gpt-4o-mini - cannot be chosen, applied automatically to read your photos'
+             '\n▫️ o-1 - the smartest and newest (does not support streaming and system prompts)'
+             '\n▫️ gpt-4o-mini - cannot be chosen, applied automatically to read photos you send'
     ,
     'model_ok': 'Model choice saved: <code>{}</code>',
     'not_visual': '⚠️ To work with photos please select <code>gpt-4o</code>',

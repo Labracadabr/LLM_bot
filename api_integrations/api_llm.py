@@ -7,6 +7,7 @@ import html
 import tiktoken
 import httpx
 
+not_streamable = ['o-1', 'gpt-4o']
 session = requests.Session()
 
 # параметры запроса
@@ -15,7 +16,7 @@ def prepare_request(conversation: list, model, stream=False):
     if model == 'codestral-latest':
         url = "https://codestral.mistral.ai/v1/chat/completions"
         api_key = config.MISTRAL_API_KEY
-    elif 'gpt' in model:
+    elif 'gpt' in model or 'o1' in model:
         url = "https://api.openai.com/v1/chat/completions"
         api_key = config.OPENAI_API_KEY
     else:

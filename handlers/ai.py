@@ -41,24 +41,32 @@ async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
     conversation_history += [new_msg]
     set_context(context_path, 'messages', conversation_history)
 
-    # LLM api stream request
-    first_msg = None
-    last_msg = None
-    full_answer = ''
-    for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=20):
-        full_answer += batch
-        answer_html = custom_markup_to_html(full_answer)
-        try:
-            # первый батч отправить новым сообщением
-            if not first_msg:
-                first_msg = await msg.answer(answer_html)
-            # остальные батчи добавлять редактированием первого сообщения
-            else:
-                last_msg = await bot.edit_message_text(answer_html, user, first_msg.message_id)
+    # send message normally
+    if model in not_streamable:
+        await bot.send_chat_action(action='typing', chat_id=user)
+        response: dict = await send_chat_request(conversation_history, model=llm_list.get(model))
+        full_answer = custom_markup_to_html(response.get('choices')[0]['message']['content'])
+        last_msg = await msg.answer(full_answer)
 
-        # если сообщение не изменено
-        except aiogram.exceptions.TelegramBadRequest:
-            pass
+    # LLM api stream request
+    else:
+        first_msg = None
+        last_msg = None
+        full_answer = ''
+        for batch in stream(conversation=conversation_history, model=llm_list.get(model), batch_size=20):
+            full_answer += batch
+            answer_html = custom_markup_to_html(full_answer)
+            try:
+                # первый батч отправить новым сообщением
+                if not first_msg:
+                    first_msg = await msg.answer(answer_html)
+                # остальные батчи добавлять редактированием первого сообщения
+                else:
+                    last_msg = await bot.edit_message_text(answer_html, user, first_msg.message_id)
+
+            # если сообщение не изменено
+            except aiogram.exceptions.TelegramBadRequest:
+                pass
 
     # сохранить ответ LLM в контекст этого юзера
     db.save_msg(last_msg)
