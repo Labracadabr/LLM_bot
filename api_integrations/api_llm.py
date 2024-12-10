@@ -11,7 +11,7 @@ not_streamable = ['o-1', 'gpt-4o']
 session = requests.Session()
 
 # параметры запроса
-def prepare_request(conversation: list, model, stream=False):
+def _prepare_request(conversation: list, model, stream=False):
     # model endpoint & api key
     if model == 'codestral-latest':
         url = "https://codestral.mistral.ai/v1/chat/completions"
@@ -26,7 +26,7 @@ def prepare_request(conversation: list, model, stream=False):
     # request
     headers = {"Authorization": "Bearer " + api_key, "Content-Type": "application/json"}
     payload = {"messages": conversation, "model": model, "stream": stream, }
-    save_json(payload, 'api_integrations/llm_last_request.json')
+    save_json(payload, f'{config.project_path}/api_integrations/llm_last_request.json')
     return url, headers, payload
 
 
@@ -35,7 +35,7 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
         model = "llama3-70b-8192"
 
     # request
-    url, headers, payload = prepare_request(conversation, model)
+    url, headers, payload = _prepare_request(conversation, model)
 
     # response - 60 sec timeout
     async with httpx.AsyncClient(timeout=60) as client:
@@ -47,7 +47,7 @@ async def send_chat_request(conversation: list, model="llama3-70b-8192") -> dict
         except Exception as e:
             return {'error': e, 'status_code': r.status_code}
 
-    save_json(response_dict, 'api_integrations/llm_last_response.json')
+    save_json(response_dict, f'{config.project_path}/api_integrations/llm_last_response.json')
     return response_dict
 
 
@@ -115,7 +115,7 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=20):
     batch = ''
 
     # request
-    url, headers, payload = prepare_request(conversation, model, stream=True)
+    url, headers, payload = _prepare_request(conversation, model, stream=True)
     response = session.post(url, headers=headers, json=payload, stream=True)
 
     # stream response

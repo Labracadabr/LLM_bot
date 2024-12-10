@@ -1,3 +1,4 @@
+import os
 from dataclasses import dataclass
 from environs import Env
 from settings import prod
@@ -5,6 +6,7 @@ from settings import prod
 
 @dataclass
 class Config:
+    project_path: str = os.path.abspath(os.path.dirname(__file__))
     BOT_TOKEN: str = None           # телеграм бот
 
     # LLM API
