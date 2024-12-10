@@ -133,14 +133,19 @@ async def model_set(msg: Message, user_data: dict):
     user = str(msg.from_user.id)
     await log(logs, user, msg.text)
     model = msg.text.lower()
+    language = user_data.get('lang')
+    lexicon = load_lexicon(language)
+
+    # o-1 only for premium
+    if model == 'o-1' and not (user_data.get('premium') or user in admins):
+        await msg.answer(text=lexicon['premium_model'])
+        return
 
     # сохранить
     db.set_user_info(user, key_vals={'model': model})
     delete_context(user, user_data)
 
     # уведомить
-    language = user_data.get('lang')
-    lexicon = load_lexicon(language)
     await msg.answer(text=lexicon['model_ok'].format(model) + lexicon['delete_context'], reply_markup=None)
 
 

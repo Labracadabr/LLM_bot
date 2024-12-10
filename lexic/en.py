@@ -17,6 +17,7 @@ lexicon: dict[str:str] = {
     ,
 
     'start': 'Hello!\n\n',
+    'premium_model': 'This model can be accessed with /premium',
     'premium': 'Payment feature is not yet set up, ask /admin personally for premium status :)',
 
     'admin': '📩 Your next message will be sent to the bot admin. To cancel, press /cancel',
@@ -38,8 +39,8 @@ lexicon: dict[str:str] = {
              '\n▫️ mixtral-8x7b - universal'
              '\n▫️ llama3-70b - capable of swearing'
              '\n▫️ codestral - optimized for code generation'
-             '\n▫️ o-1 - the smartest and newest (does not support streaming and system prompts), requires /premium'
-             '\n▫️ gpt-4o-mini - cannot be chosen, applied automatically to read photos you send'
+             '\n🔸 o-1 - the smartest and newest (does not support streaming and system prompts), requires /premium'
+             '\n▪️ gpt-4o-mini - cannot be chosen, applied automatically to read photos you send'
     ,
     'model_ok': 'Model choice saved: <code>{}</code>',
     'not_visual': '⚠️ To work with photos please select <code>gpt-4o</code>',
