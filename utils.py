@@ -119,7 +119,7 @@ def set_context(filename: str, key: str, val):
 
 
 # удалить контекст и перезаписать системное сообщение
-def delete_context(context_path: str, user_data: dict, stream=True):
+def delete_context(context_filename: str, user_data: dict, stream=True):
     from api_integrations.api_llm import system_message
     language = user_data.get('lang')
     sys_prompt = user_data.get('sys_prompt')
@@ -132,9 +132,9 @@ def delete_context(context_path: str, user_data: dict, stream=True):
     else:
         conversation_history = [system_message(language, extra=sys_prompt)]
 
-    set_context(context_path, 'messages', conversation_history)
+    set_context(context_filename, 'messages', conversation_history)
     if stream:
-        set_context(context_path, 'stream', True)
+        set_context(context_filename, 'stream', True)
 
 
 # выбор языка. на входе языковой код (по дефолту en), на выходе словарь с лексикой этого языка

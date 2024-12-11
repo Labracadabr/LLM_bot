@@ -143,6 +143,7 @@ async def model_set(msg: Message, user_data: dict):
 
     # сохранить
     db.set_user_info(user, key_vals={'model': model})
+    user_data['model'] = model
     delete_context(user, user_data)
 
     # уведомить
