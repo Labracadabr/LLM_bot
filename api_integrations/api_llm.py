@@ -7,7 +7,7 @@ import html
 import tiktoken
 import httpx
 
-not_streamable = ['o-1', 'gpt-4o']
+not_streamable = ['o-1', 'o1', 'gpt-4o']
 session = requests.Session()
 
 # параметры запроса
@@ -126,7 +126,13 @@ def stream(conversation: list, model="llama3-70b-8192", batch_size=20):
                 chunk = chunk[len("data: "):]
             try:
                 # прочитать контент чанка
-                chunk_json = json.loads(chunk)
+                chunk_json: dict = json.loads(chunk)
+                if 'error' in chunk_json.keys():
+                    error_text = json.dumps(chunk_json["error"], ensure_ascii=False, indent=2)
+                    yield f'⚠️ ERROR:\n```{error_text}```'
+                    save_json(chunk_json, f'{config.project_path}/api_integrations/last_error')
+                    return
+
                 delta = chunk_json['choices'][0]['delta']
                 if 'content' in delta:
                     chunk_count += 1
@@ -189,7 +195,7 @@ def transcribe_audio(audio_file_path, language) -> dict:
     except Exception as e:
         return {'error': e}
 
-    save_json(response_dict, 'api_integrations/stt_last_response.json')
+    save_json(response_dict, f'{config.project_path}/api_integrations//stt_last_response.json')
     return response_dict
 
 
