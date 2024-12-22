@@ -10,7 +10,7 @@ router: Router = Router()
 
 
 # юзер что-то пишет
-@router.message(F.content_type.in_({'text'}))
+@router.message(F.content_type.in_({'text', 'document'}))
 async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
     db.save_msg(msg)
     user = str(msg.from_user.id)
@@ -28,15 +28,36 @@ async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
         db.save_msg(ans)
         return
 
-    # работа с текстом
-    context_path = f'{user}'
-    prompt = msg.html_text
-    new_msg = user_message(prompt)
+    # если приложен файл
+    if msg.document:
+        doc_type = msg.document.mime_type
+        print(f'{doc_type = }')
+        # текстовый файл
+        if doc_type.startswith('text/') or 'json' in doc_type:
+            # скачать текст
+            file_save_path = f'{users_data}/{user}_input.txt'
+            file_id = msg.document.file_id
+            await bot.download(file=file_id, destination=file_save_path)
+
+            # вставить в промпт
+            content = open(file_save_path, 'r', encoding='utf-8').read()
+            prompt = f'{msg.caption}\nfile content below:\n' + content
+
+        # тип файлов не принимается
+        else:
+            await msg.answer(lexicon['unsupported_file'])
+            return
+
+    # если только текст
+    else:
+        prompt = msg.html_text
 
     await log(logs, user, f'#q: {prompt}')
     await bot.send_chat_action(chat_id=user, action='typing')
 
     # добавить новое сообщение в контекст
+    context_path = f'{user}'
+    new_msg = user_message(prompt)
     conversation_history: list = get_context(context_path, 'messages')
     conversation_history += [new_msg]
     set_context(context_path, 'messages', conversation_history)
@@ -45,8 +66,18 @@ async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
     if model in not_streamable:
         await bot.send_chat_action(action='typing', chat_id=user)
         response: dict = await send_chat_request(conversation_history, model=llm_list.get(model))
-        full_answer = custom_markup_to_html(response.get('choices')[0]['message']['content'])
-        last_msg = await msg.answer(full_answer)
+        raw_answer = response.get('choices')[0]['message']['content']
+        full_answer = custom_markup_to_html(raw_answer)
+
+        # если ответ слишком длинный - отправить его файлом
+        if len(full_answer) > 4090:
+            # записать файл
+            txt_file_path = f'{users_data}/{user}_output.txt'
+            open(txt_file_path, 'w', encoding='utf-8').write(raw_answer)
+
+            last_msg = await msg.answer_document(FSInputFile(path=txt_file_path))
+        else:
+            last_msg = await msg.answer(full_answer)
 
     # LLM api stream request
     else:
@@ -59,21 +90,20 @@ async def usr_txt1(msg: Message, bot: Bot, user_data: dict):
             try:
                 # первый батч отправить новым сообщением
                 if not first_msg:
-                    first_msg = await msg.answer(answer_html)
+                    last_msg = first_msg = await msg.answer(answer_html)
                 # остальные батчи добавлять редактированием первого сообщения
                 else:
                     last_msg = await bot.edit_message_text(answer_html, user, first_msg.message_id)
 
             # если сообщение не изменено
-            except aiogram.exceptions.TelegramBadRequest:
-                pass
+            except aiogram.exceptions.TelegramBadRequest as e:
+                print(f'TelegramBadRequest: {e}')
 
     # сохранить ответ LLM в контекст этого юзера
-    db.save_msg(last_msg)
-
     new_msg = {"role": "assistant", "content": full_answer}
     conversation_history += [new_msg]
     set_context(context_path, 'messages', conversation_history)
+    db.save_msg(last_msg)
 
     # обновить usage - посчитать токены всего контекста "вручную", тк в стриме нет инфо о usage
     usage = sum(count_tokens(txt.get('content')) for txt in conversation_history)

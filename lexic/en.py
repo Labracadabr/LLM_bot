@@ -45,6 +45,7 @@ lexicon: dict[str:str] = {
     'model_ok': 'Model choice saved: <code>{}</code>',
     'not_visual': '⚠️ To work with photos please select <code>gpt-4o</code>',
     'caption': '⚠️ Send a photo and a text question to it in one message',
+    'unsupported_file': '⚠️ Such file type is not yet supported',
 
     'status_adm': 'Token usage:'
                   '\n{} you / {} all today'

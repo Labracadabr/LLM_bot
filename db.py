@@ -117,7 +117,7 @@ def save_msg(cursor, msg: Message):
         'chat': msg.chat.id,
         'msg_id': msg.message_id,
         'username': msg.from_user.username,
-        'text': html.escape(msg.text) if msg.text else custom_markup_to_html(msg.caption),
+        'text': html.escape(msg.text) if msg.text else custom_markup_to_html(msg.caption) if msg.caption else None,
         'reply_to': msg.reply_to_message.message_id if msg.reply_to_message else 0,
         'unix': int(msg.date.timestamp()),
         'type': msg.content_type,

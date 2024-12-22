@@ -126,7 +126,7 @@ def delete_context(context_filename: str, user_data: dict, stream=True):
 
     # o-1 не поддерживает system_message
     model = user_data.get('model')
-    if model == 'o-1':
+    if model in ('o-1', 'o1'):
         conversation_history = []
         stream = False
     else:
