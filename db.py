@@ -92,9 +92,6 @@ def new_user(cursor, user, **kwargs) -> int:
     extra_s = ", ".join(["%s" for i in range(len(kwargs))])
     fields = ", ".join([i for i in kwargs.keys()])
     values = tuple(f"'{i}'" for i in [user] + list(kwargs.values()))
-    print(f'{extra_s = }')
-    print(f'{fields = }')
-    print(f'{values = }')
 
     query = f"""INSERT INTO {tables['users']} (user_id, {fields}) VALUES (%s, {extra_s});""" % values
     print(f'{query = }')
@@ -212,6 +209,51 @@ def get_col(cursor, col_name, table='users') -> list[tuple]:
     cursor.execute(query)
     rows = cursor.fetchall()
     return rows
+
+
+# на входе список колонок, на выходе список словарей, где словарь = ряд таблицы, ключи = колонки
+@postgres_decorator
+def get_cols(cursor, cols: list, table, where: dict = None) -> list[dict]:
+    # запрос
+    col_names = ', '.join(cols)
+    query = f'SELECT {col_names} FROM {table}'
+
+    # если указано where, то вернуть один словарь, где значение колонки совпадает значению словаря where
+    if where:
+        column, value = next(iter(where.items()))
+        query += f" WHERE {column} = '{value}';"
+    else:
+        query += ';'
+    print(f'{query = }')
+
+    # ответ
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    print(f'got {len(rows)} rows')
+
+    # превратить в список словарей
+    output = []
+    for row in rows:
+        output.append({cols[i]: row[i] for i in range(len(cols))})
+
+    return output
+
+
+# задать словарем значения одной существующей строке
+@postgres_decorator
+def set_row(cursor, where: dict, data_dict: dict, table) -> bool:
+    assert len(where) == 1
+    row_id = list(where)[0]
+
+    # создать строку запроса
+    set_str = ", ".join([f"{key} = %s" for key in data_dict.keys()])
+    upd_req = f"UPDATE {table} SET {set_str} WHERE {row_id} = %s"
+
+    # создать кортеж значений
+    values = tuple(val for val in data_dict.values()) + (where[row_id],)
+    cursor.execute(upd_req, values)
+    print(f'row {where} updated')
+    return True
 
 
 if __name__ == '__main__':
