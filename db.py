@@ -62,6 +62,7 @@ def create_users_table(cursor, table='users'):
                                 img_today INTEGER,
                                 img_total INTEGER,
                                 premium BOOL,
+                                role VARCHAR(255)
     );"""
     cursor.execute(create_table_query)
     print(f"Table {tables['users']} created")
@@ -89,6 +90,7 @@ def create_messages_table(cursor, table='messages'):
 # создать запись нового юзера и вернуть их новое количество
 @postgres_decorator
 def new_user(cursor, user, **kwargs) -> int:
+    kwargs['role'] = 'free'
     extra_s = ", ".join(["%s" for i in range(len(kwargs))])
     fields = ", ".join([i for i in kwargs.keys()])
     values = tuple(f"'{i}'" for i in [user] + list(kwargs.values()))

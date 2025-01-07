@@ -3,10 +3,10 @@ from enum import Enum
 
 # класс ролей юзеров - для выдачи доступов и прочего
 class UserRole(Enum):
-    USER_FREE = "user_free"
-    USER_PREM = "user_prem"
+    FREE = "free"
+    PREMIUM = "premium"
     ADMIN = "admin"
-    BANNED = "banned"
+    BANNED = "ban"
 
     def __new__(cls, value):
         obj = object.__new__(cls)
@@ -19,6 +19,6 @@ class UserRole(Enum):
 
 # test
 if __name__ == '__main__':
-    role = UserRole('user_premium')
+    role = UserRole('premium')
     print(role, type(role))  # user_premium <enum 'UserRole'>
     print(role.value, type(role.value))  # user_premium <class 'str'>
