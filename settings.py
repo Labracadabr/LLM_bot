@@ -7,12 +7,15 @@ available_languages = ('ru', 'en')
 
 # словарь моделей {frontend name: backend name}
 llm_list = {
+    'deepseek-r1': 'deepseek-distill-llama-70b',
     'mixtral-8x7b': 'mixtral-8x7b-32768',
     'llama3-70b': 'llama3-70b-8192',
     # 'gpt-4o': 'gpt-4o',
     # 'gpt-4o-mini': 'gpt-4o-mini',
     'codestral': 'codestral-latest',
-    'o-1': 'o1-mini',
+    'qwen-2.5': 'qwen-2.5-coder-32b',
+    # 'o1': 'o1-mini',
+    # 'o1': 'o1-preview',
     # 'llama3-8b': 'llama3-8b-8192',
     # 'gpt-3.5': 'gpt-3.5-turbo',
 }

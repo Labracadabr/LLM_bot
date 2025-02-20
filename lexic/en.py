@@ -36,10 +36,11 @@ lexicon: dict[str:str] = {
 
     'delete_context': '\nContext deleted',
     'model': 'Chose the neural network model. Now you have: <code>{}</code>'
+             '\n▫️ deepseek-r1 - the smartest and newest, writes its thoughts before answering'
              '\n▫️ mixtral-8x7b - universal'
              '\n▫️ llama3-70b - capable of swearing'
              '\n▫️ codestral - optimized for code generation'
-             '\n🔸 o-1 - the smartest and newest (does not support streaming and system prompts), requires /premium'
+             # '\n🔸 o-1 - the smartest and newest (does not support streaming and system prompts), requires /premium'
              '\n▪️ gpt-4o-mini - cannot be chosen, applied automatically to read photos you send'
     ,
     'model_ok': 'Model choice saved: <code>{}</code>',
